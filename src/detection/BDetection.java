@@ -2463,6 +2463,7 @@ public class BDetection {
 	   int correct = 0;
 	   int fp = 0;
 	   int fn = 0;
+	   ArrayList<String> falseNegatives = new ArrayList<String>();
 	   Frame[] frames = sortFrames(getTags(filename), bds);
 	   for (int i=0; i < bds.size(); i++) {
 		   
@@ -2495,11 +2496,19 @@ public class BDetection {
 		   
 		   }
 		   for (Bubble b : bubbles) {
-			   if (b.hit == 0)
+			   if (b.hit == 0) {
+				   falseNegatives.add(frames[i].filename + ": " + b.x1 + ", " + b.y1 + " - " + b.x2 + ", " + b.y2);
 			       fn++;
+			   }
 		   }
 	   }
 	   System.out.println("Correct=" + correct + ", FP=" + fp + ", FN=" + fn);
+	   if (falseNegatives.size() > 0) {
+		   System.out.println("False Negatives:");
+		   for (String str : falseNegatives) {
+			   System.out.println(str);
+		   }
+	   }
    }
    
    public static void main(String[] args) {
