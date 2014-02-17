@@ -1,0 +1,9 @@
+File; Upper Left X; Upper Left Y; Lower Right X; Lower Right Y
+d0101.jpg;171;8;416;177
+d0102.jpg;102;3;224;145
+d0103.jpg;153;7;346;162
+d0104.jpg;33;212;268;440
+d0105.jpg;234;12;366;190
+d0106.jpg;124;6;347;193
+d0107.jpg;0;0;754;842
+d0108.jpg;0;0;709;413
