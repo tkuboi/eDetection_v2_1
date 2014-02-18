@@ -1,3 +1,4 @@
 *.jpg
 *.class
 *.zip
+/bin
