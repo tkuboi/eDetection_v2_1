@@ -1054,34 +1054,60 @@ public class BDetection {
    }
 
    public void testRegions2() {
-      double percentArea = 0;
       double bpRatio = 0;
       for (RegionInfo region : this.pixCounts) {
-         //System.out.println("pixCount=" + region.pixCount);
-         //percentArea = (double)region.pixCount / ((double)this.width * (double)this.height);
-         percentArea = ((double)(region.xRange * region.yRange)) / ((double)this.width * (double)this.height);
-         if (percentArea < BDetection.MAX_AREA && percentArea > BDetection.MIN_AREA
+         analyzeContent(region, false);
+         region.histR = buildHistR(region);
+         region.percentArea = ((double)(region.xRange * region.yRange)) / ((double)this.width * (double)this.height);
+         if (region.percentArea < BDetection.MAX_AREA && region.percentArea > BDetection.MIN_AREA
              && (region.xRange < this.width * BDetection.MAX_WIDTH
              || region.yRange < this.height * BDetection.MAX_HEIGHT)
              && (region.enclosed || region.percentEnclosed > 0.83)
              && region.pixCount > 6000
              && region.distBtwCenters < 57.4) {
-            //region.isBubble = calcAverageBW(region);
-            //region.isBubble = containsText(region);
             bpRatio = calcAverageBW(region);
             if (bpRatio > 0.059) {
                region.isBubble = true;
-               //extractText(region);
             }
             
          }
          System.out.println("In testRegions: Region " + region.marker + " is bubble="
-                               + region.isBubble + ". area=" + percentArea + " PT enclosed=" + region.percentEnclosed
+                               + region.isBubble + ". area=" + region.percentArea + " PT enclosed=" + region.percentEnclosed
                                + ", pixCount=" + region.pixCount + ", dist=" + region.distBtwCenters
                                + ", bpRatio=" + bpRatio);
       }
    }
 
+   private Histogram2D buildHistR(RegionInfo region) {
+	   int sizeX = 360; //360 degrees
+	   int sizeY = (int)(Math.sqrt(this.width * this.width + this.height * this.height)/2);
+	   Histogram2D histR = new Histogram2D(sizeX, sizeY, 0, sizeX, 0, sizeY);
+	   int orgX = (region.maxX - region.minX) / 2;
+	   int orgY = (region.maxY - region.minY) / 2;
+	   //rho = cos()x + sin()y;
+	   //x = r*cos(), y = r*sin();
+	   int x = 0;
+	   int y = 0;
+	   int idx = 0;
+	   int val = 0;
+	   for (int t = 0; t < sizeX; t++) {
+		   for (int r = 1; r < sizeY; r++) {
+			   x = orgX + (int) Math.floor(r * Math.cos(t*Math.PI/180));
+			   y = orgY + (int) Math.floor(r * Math.sin(t*Math.PI/180));
+			   idx = y * this.width + x;
+			   if (isLegal(idx) && this.pixels[idx*3] == (byte)0) {
+				   val = this.blackPixels[idx] & 0xff;
+                   if (val >=2 && this.blackRegions.get(val - 2).type != 1)
+				       histR.bin(t, r);
+			   }
+			   else if (!isLegal(idx)) {
+				   histR.bin(t, r);
+			   }
+		   }
+	   }
+	   return histR;
+   }
+   
    /*private double getDistCenters(RegionInfo r) {
       double cX1 = (r.minX + r.maxX) / 2;
       double cY1 = (r.minY + r.maxY) / 2;
@@ -1185,16 +1211,13 @@ public class BDetection {
 	      writeRegionImage(region, blob, 0, width, height);
    }
    
-   private void extractText(RegionInfo region, Boolean write) {
-	      ArrayList<Integer> seeds = new ArrayList<Integer>();
-	      ArrayList<RegionInfo> list = new ArrayList<RegionInfo>();
+   private void analyzeContent(RegionInfo region, Boolean write) {
 	      int maxX = (region.maxX + 4 <= this.width ? region.maxX + 4 : this.width);
 	      int minX = (region.minX - 4 >= 0 ? region.minX - 4 : 0);
 	      int maxY = (region.maxY + 4 <= this.height ? region.maxY + 4 : this.height);
 	      int minY = (region.minY - 4 >= 0 ? region.minY - 4 : 0);
 	      final int width = maxX - minX + 1;
 	      final int height = maxY - minY + 1;
-	      boolean start = false;
 	      int idx = 0;
 	      int[] rangeCol = new int[2];
 	      int[] rangeRow = new int[2];
@@ -2559,7 +2582,6 @@ public class BDetection {
 	   int correct = 0;
 	   int fp = 0;
 	   int fn = 0;
-	   byte[] blob = null;
 	   ArrayList<String> falseNegatives = new ArrayList<String>();
 	   Frame[] frames = sortFrames(getTags(filename), bds);
 	   for (int i=0; i < bds.size(); i++) {
@@ -2581,13 +2603,6 @@ public class BDetection {
 							   && bubbles.get(j).hit == 0) {
 						   bubbles.get(j).hit = 1;
 						   correct++;
-						   /*if (r.isBubble) {
-							   correct++;
-							   bubbles.get(j).hit = 1;
-						   }
-						   else {
-							   r.isBubble = true;							   
-						   }*/
 						  
 						   cont = false;
 						   if (textOutput)
@@ -2595,14 +2610,10 @@ public class BDetection {
 					   }
 					   j++;
 				   }
-				   if (cont && r.isBubble) {
+				   if (cont) {
 					   fp++;
 				   }
-				   //if (cont)
-					//   bds.get(i).extractText(r, false);
-
 			   }
-			   bds.get(i).extractText(r, false);
 		   }
 		   for (Bubble b : bubbles) {
 			   if (b.hit == 0) {

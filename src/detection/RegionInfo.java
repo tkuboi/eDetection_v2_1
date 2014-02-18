@@ -24,6 +24,7 @@ public class RegionInfo {
    public double sdPix;
    public double percentEnclosed; // percentage enclosed by bubble (black pixels)
    public double distBtwCenters;
+   public double percentArea;
    public boolean isBubble;
    public boolean enclosed;  // whether or not the region is enclosed
    public RegionGroup rg;
@@ -52,6 +53,7 @@ public class RegionInfo {
          this.enclosed = false;
          this.percentEnclosed = 0.0;
          this.distBtwCenters = 0.0;
+         this.percentArea = 0.0;
          this.rg = null;
          this.pixels = new ArrayList<Integer>();
          this.histH = null;
@@ -79,6 +81,7 @@ public class RegionInfo {
          this.enclosed = closed;
          this.percentEnclosed = ptClosed;
          this.distBtwCenters = 0.0;
+         this.percentArea = 0.0;
          this.rg = null;
          this.pixels = new ArrayList<Integer>();
          this.histH = null;
@@ -105,6 +108,7 @@ public class RegionInfo {
          this.textGroup = -1;
          this.enclosed = closed;
          this.percentEnclosed = ptClosed;
+         this.percentArea = 0.0;
          this.rg = g;
          this.distBtwCenters = calcDist();
          this.pixels = new ArrayList<Integer>();
@@ -132,6 +136,7 @@ public class RegionInfo {
        this.textGroup = -1;
        this.enclosed = false;
        this.percentEnclosed = 0.0;
+       this.percentArea = 0.0;
        this.rg = null;
        this.distBtwCenters = 0.0;
        this.pixels = pixels;
@@ -183,6 +188,8 @@ public class RegionInfo {
        str = str + "\"sdPix\":" + this.sdPix + ", ";
        str = str + "\"enclosed\":" + this.enclosed + ", ";
        str = str + "\"percentEnclosed\":" + this.percentEnclosed + ", ";
+       str = str + "\"percentArea\":" + this.percentArea + ", ";
+       //str = str + "\"HistR\":" + this.histR.toJsonString() + ", ";
        str = str + "\"HistH\":" + this.histH.toJsonString() + ", ";
        str = str + "\"HistV\":" + this.histV.toJsonString();
 	   str += "}";
