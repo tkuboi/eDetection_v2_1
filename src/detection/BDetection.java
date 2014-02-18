@@ -10,8 +10,11 @@ import java.awt.Dimension;
 import java.awt.Point;
 import java.util.*;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 
 import imageUtil.*;
 import model.*;
@@ -589,20 +592,20 @@ public class BDetection {
             y = ((group.maxY + group.minY) / 2);
             idx = y * width + x;
             while(i++ < NUM_SEEDS) {
-            while(!checkPixel(this.pixels, idx, width, height, 3)) { //  && i++ < 1000
-               x = BDetection.randomWithRange(group.minX, (group.maxX + group.minX) / 2);
-               y = BDetection.randomWithRange(group.minY, (group.maxY + group.minY) / 2);
-               //y++; 
-               idx = y * this.width + x;
-               //seeds.add(new Seed(idx, group.minX, group.minY, group.maxX, group.maxY, group.isClosed(), group));
-            }
-            RegionInfo rInfo = seedGrowth4(new Seed(idx, group.minX, group.minY, group.maxX, group.maxY, group.isClosed(), group),
-            		BDetection.RADIUS, BDetection.GAP_SCORE);
-            candidates[i-1] = idx;
-            if (rInfo.pixCount > maxVal) {
-            	maxVal = rInfo.pixCount;
-            	maxIdx = i-1;
-            }
+            	while(!checkPixel(this.pixels, idx, width, height, 3)) { //  && i++ < 1000
+            		x = BDetection.randomWithRange(group.minX, (group.maxX + group.minX) / 2);
+            		y = BDetection.randomWithRange(group.minY, (group.maxY + group.minY) / 2);
+            		//y++; 
+            		idx = y * this.width + x;
+            		//seeds.add(new Seed(idx, group.minX, group.minY, group.maxX, group.maxY, group.isClosed(), group));
+            	}
+            	RegionInfo rInfo = seedGrowth4(new Seed(idx, group.minX, group.minY, group.maxX, group.maxY, group.isClosed(), group),
+            			BDetection.RADIUS, BDetection.GAP_SCORE);
+            	candidates[i-1] = idx;
+            	if (rInfo.pixCount > maxVal) {
+            		maxVal = rInfo.pixCount;
+            		maxIdx = i-1;
+            	}
             }
             seeds.add(new Seed(candidates[maxIdx], group.minX, group.minY, group.maxX, group.maxY, group.isClosed(), group));
             System.out.println((idx % this.width) + "," + (idx / this.width));
@@ -1112,7 +1115,6 @@ public class BDetection {
 
    public byte[] getSubBlob(int orgX, int orgY, int x, int y) {
       System.out.println(" minX=" + orgX + " minY=" + orgY + " maxX=" + x + " maxY=" + y + " size=" + ((x - orgX + 1) * (y - orgY + 1) * 3));
-      int threshold = BDetection.BW_THRESHOLD;
       int width = x - orgX + 1;
       int height = y - orgY + 1;
       byte[] blob = new byte[width * height * 3];
@@ -1135,14 +1137,21 @@ public class BDetection {
    private void extractText(RegionInfo region) {
 	      ArrayList<Integer> seeds = new ArrayList<Integer>();
 	      ArrayList<RegionInfo> list = new ArrayList<RegionInfo>();
-	      int maxX = region.maxX - region.minX;
-	      final int width = maxX + 1;
-	      final int height = region.maxY - region.minY + 1;
+	      int maxX = (region.maxX + 4 <= this.width ? region.maxX + 4 : this.width);
+	      int minX = (region.minX - 4 >= 0 ? region.minX - 4 : 0);
+	      int maxY = (region.maxY + 4 <= this.height ? region.maxY + 4 : this.height);
+	      int minY = (region.minY - 4 >= 0 ? region.minY - 4 : 0);
+	      /*int maxX = region.maxX;
+	      int minX = region.minX;
+	      int maxY = region.maxY;
+	      int minY = region.minY;*/
+	      final int width = maxX - minX + 1;
+	      final int height = maxY - minY + 1;
 	      boolean start = false;
 	      int idx = 0;
 	      int[] rangeCol = new int[2];
 	      int[] rangeRow = new int[2];
-	      byte[] blob = getSubBlob(region.minX, region.minY, region.maxX, region.maxY);
+	      byte[] blob = getSubBlob(minX, minY, maxX, maxY);
 	      for (int row = 0; row < height; row++) {
 	    	  for (int col = 0; col < width; col++) {
 	    		  idx = row * width + col;
@@ -1152,7 +1161,7 @@ public class BDetection {
 	    			  rangeCol = getStartEndIdxCol(blob, width, row);
 	    		  //System.out.println("min row=" + rangeRow[0] + "-max row=" + rangeRow[1] + "/" + height);
 	    		  //System.out.println("val of col=" + col + " is " + (0xFF & blob[idx * 3]));
-	    		  if ((blob[idx*3] & 0xff) <= 0
+	    		  /*if ((blob[idx*3] & 0xff) <= 0
 	    				  && (col < rangeCol[0] || col > rangeCol[1] || row == height - 1)) {
 	    			  //System.out.println("val of idx=" + idx + " is " + (blob[idx*3] & 0xff));
 	    			  //blob[idx*3] = (byte)1;
@@ -1170,10 +1179,75 @@ public class BDetection {
 	    			               }
 	    			            }
 	    			         );
+	    		  }*/
+	    	  }
+	      }
+	      writeRegionImage(region, blob, 0, width, height);
+   }
+   
+   private void extractText(RegionInfo region, Boolean write) {
+	      ArrayList<Integer> seeds = new ArrayList<Integer>();
+	      ArrayList<RegionInfo> list = new ArrayList<RegionInfo>();
+	      int maxX = (region.maxX + 4 <= this.width ? region.maxX + 4 : this.width);
+	      int minX = (region.minX - 4 >= 0 ? region.minX - 4 : 0);
+	      int maxY = (region.maxY + 4 <= this.height ? region.maxY + 4 : this.height);
+	      int minY = (region.minY - 4 >= 0 ? region.minY - 4 : 0);
+	      final int width = maxX - minX + 1;
+	      final int height = maxY - minY + 1;
+	      boolean start = false;
+	      int idx = 0;
+	      int[] rangeCol = new int[2];
+	      int[] rangeRow = new int[2];
+	      byte[] blob = getSubBlob(minX, minY, maxX, maxY);
+	      for (int row = 0; row < height; row++) {
+	    	  for (int col = 0; col < width; col++) {
+	    		  idx = row * width + col;
+	    		  if (col == 0)
+	    			  rangeCol = getStartEndIdxCol(blob, width, row);
+	    		  if ((blob[idx*3] & 0xff) <= 0
+	    				  && (col < rangeCol[0] || col > rangeCol[1] || row == height - 1)) {
+	    			  RegionInfo rInfo = seedGrowth(idx, 1, width, blob,
+	    			            new Callable1<Boolean>() {
+	    			               public Boolean call(int idx, int minX, int maxX, int minY, int maxY, byte[] blob) {
+	    			                  return BDetection.isBlackSpace(idx, 0, width, height, blob);
+	    			               }
+	    			            },
+	    			            new Callable2<Integer>() {
+	    			               public Integer call(int idx, int val, ArrayList<Integer> queue, byte[] blob) {
+	    			                  return BDetection.addQueue(idx, val, queue, blob);
+	    			               }
+	    			            }
+	    			         );
 	    		  }
 	    	  }
 	      }
-	      writeRegionImage(region, blob, 0);
+	      region.histH = buildHistH(blob, width, height);
+	      region.histV = buildHistV(blob, width, height);
+	      //return blob;
+	      if (write)
+	          writeRegionImage(region, blob, 0, width, height);
+   }
+   
+   private static Histogram buildHistH(byte[] blob, int width, int height) {
+	   Histogram hist = new Histogram(10, 0, width);
+	   for (int row = 0; row < height; row++) {
+		   for (int col = 0; col < width; col++) {
+			   if (blob[row * width + col] == (byte)0)
+				   hist.bin(col);
+		   }
+	   }
+	   return hist;
+   }
+   
+   private static Histogram buildHistV(byte[] blob, int width, int height) {
+	   Histogram hist = new Histogram(10, 0, height);
+	   for (int row = 0; row < height; row++) {
+		   for (int col = 0; col < width; col++) {
+			   if (blob[row * width + col] == (byte)0)
+				   hist.bin(row);
+		   }
+	   }
+	   return hist;
    }
    
    private static int[] getStartEndIdxRow(byte[] blob, int width, int height, int col) {
@@ -1304,6 +1378,26 @@ public class BDetection {
       }
    }
 
+   private void writeRegionImage(RegionInfo region, byte[] pixels, int idx, int width, int height) {
+	      int i = this.filename.indexOf(".jpg");
+	      String fname = this.filename.substring(0, i) + "_" + Integer.toString(region.marker)
+	    		  + "_" + Integer.toString(idx) + ".jpg";
+	      //int width = region.xRange;
+	      //int height = region.yRange;
+	      byte[] blob = fillRegion(pixels, width, height);
+	      try {
+	         MagickImage blobImage = new MagickImage();
+	         blobImage.constituteImage(width,
+	                                   height,
+	                                   "RGB",
+	                                   blob);
+	         blobImage.setFileName(fname);
+	         blobImage.writeImage(new ImageInfo());
+	      } catch (MagickException e) {
+	         e.printStackTrace();
+	      }
+	   }
+   
    private void writeBlackImage(String fname) {
       byte[] blob = convertToRGB();
       try {
@@ -1731,6 +1825,7 @@ public class BDetection {
       return new RegionInfo(0, count, minX, maxX, minY, maxY);
    }
 
+   // called from pickRegions2 to fill regions
    public RegionInfo seedGrowth3(Seed seed, int marker, int radius, float gScore) {
       int pix, x, y, x1, y1, idx, count, maxX, minX, maxY, minY;
       int edgePixels = 0;
@@ -1952,6 +2047,7 @@ public class BDetection {
                              seed.closed, ((double)closed / (double)edgePixels), seed.rg);
    }
 
+   //called from pickRegions2 to do seed growth preliminarily.
    public RegionInfo seedGrowth4(Seed seed, int radius, float gScore) {
 	      int pix, x, y, x1, y1, idx, count, maxX, minX, maxY, minY;
 	      int edgePixels = 0;
@@ -2463,6 +2559,7 @@ public class BDetection {
 	   int correct = 0;
 	   int fp = 0;
 	   int fn = 0;
+	   byte[] blob = null;
 	   ArrayList<String> falseNegatives = new ArrayList<String>();
 	   Frame[] frames = sortFrames(getTags(filename), bds);
 	   for (int i=0; i < bds.size(); i++) {
@@ -2484,16 +2581,28 @@ public class BDetection {
 							   && bubbles.get(j).hit == 0) {
 						   bubbles.get(j).hit = 1;
 						   correct++;
+						   /*if (r.isBubble) {
+							   correct++;
+							   bubbles.get(j).hit = 1;
+						   }
+						   else {
+							   r.isBubble = true;							   
+						   }*/
+						  
 						   cont = false;
 						   if (textOutput)
-							   bds.get(i).extractText(r);
+						      bds.get(i).extractText(r);
 					   }
 					   j++;
 				   }
-				   if (cont)
+				   if (cont && r.isBubble) {
 					   fp++;
+				   }
+				   //if (cont)
+					//   bds.get(i).extractText(r, false);
+
 			   }
-		   
+			   bds.get(i).extractText(r, false);
 		   }
 		   for (Bubble b : bubbles) {
 			   if (b.hit == 0) {
@@ -2509,6 +2618,32 @@ public class BDetection {
 			   System.out.println(str);
 		   }
 	   }
+   }
+   
+   public static void exportFeatureSet(ArrayList<BDetection> bds, String filename) {
+	   PrintWriter writer;
+	   //String str = "";
+	   try {
+		   writer = new PrintWriter(filename, "UTF-8");
+		   for (int i=0; i < bds.size(); i++) {
+			   writer.println("{\"filename\":" + bds.get(i).filename);
+			   for (RegionInfo r : bds.get(i).pixCounts) {
+				   writer.println(r.toJsonString());
+			   }
+			   writer.println("}");
+		   }
+		   writer.close();
+	   } catch (FileNotFoundException | UnsupportedEncodingException e) {
+		   // TODO Auto-generated catch block
+		   e.printStackTrace();
+	   }
+   }
+   
+   public static String toJsonString(RegionInfo r) {
+	   String str = "{";
+	   
+	   str += "}";
+	   return str;
    }
    
    public static void main(String[] args) {
@@ -2541,7 +2676,8 @@ public class BDetection {
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
       }
-      BDetection.evaluate("./TrainingSet/bubbles.txt",bds, false);            
+      BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
+      BDetection.exportFeatureSet(bds, "featureSet.json");
    }
 }
 

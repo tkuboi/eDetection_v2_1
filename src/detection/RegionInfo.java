@@ -3,6 +3,9 @@ package detection;
 import java.util.*;
 import java.awt.Point;
 
+import model.Histogram;
+import model.Histogram2D;
+
 public class RegionInfo {
    public int marker;
    public int pixCount;
@@ -25,6 +28,9 @@ public class RegionInfo {
    public boolean enclosed;  // whether or not the region is enclosed
    public RegionGroup rg;
    public ArrayList<Integer> pixels;
+   public Histogram histV;
+   public Histogram histH;
+   public Histogram2D histR;
 
    public RegionInfo(int m, int n, int x1, int x2, int y1, int y2) {
          this.marker = m;
@@ -48,6 +54,9 @@ public class RegionInfo {
          this.distBtwCenters = 0.0;
          this.rg = null;
          this.pixels = new ArrayList<Integer>();
+         this.histH = null;
+         this.histV = null;
+         this.histR = null;
    }
 
    public RegionInfo(int m, int n, int x1, int x2, int y1, int y2, boolean closed, double ptClosed) {
@@ -72,6 +81,9 @@ public class RegionInfo {
          this.distBtwCenters = 0.0;
          this.rg = null;
          this.pixels = new ArrayList<Integer>();
+         this.histH = null;
+         this.histV = null;
+         this.histR = null;
    }
 
    public RegionInfo(int m, int n, int x1, int x2, int y1, int y2, boolean closed, double ptClosed, RegionGroup g) {
@@ -96,6 +108,9 @@ public class RegionInfo {
          this.rg = g;
          this.distBtwCenters = calcDist();
          this.pixels = new ArrayList<Integer>();
+         this.histH = null;
+         this.histV = null;
+         this.histR = null;
    }
 
    public RegionInfo(int m, int n, int x1, int x2, int y1, int y2, ArrayList<Integer> pixels) {
@@ -120,6 +135,9 @@ public class RegionInfo {
        this.rg = null;
        this.distBtwCenters = 0.0;
        this.pixels = pixels;
+       this.histH = null;
+       this.histV = null;
+       this.histR = null;
  }
 
    public double calcDist() {
@@ -144,6 +162,31 @@ public class RegionInfo {
       str = str + "distBtwCenters=" + this.distBtwCenters + ",";
       str = str + "type=" + this.type;
       return str;
+   }
+   
+   public String toJsonString() {
+	   String str = "{";
+	   str = str + "\"marker\":" + this.marker + ",";
+       str = str + "\"isBubble\":" + this.isBubble + ", ";
+	   str = str + "\"pixCount\":" + this.pixCount + ", ";
+	   str = str + "\"minX\":" + this.minX + ", ";
+	   str = str + "\"minY\":" + this.minY + ", ";
+	   str = str + "\"maxX\":" + this.maxX + ", ";
+	   str = str + "\"maxY\":" + this.maxY + ", ";
+	   str = str + "\"xRange\":" + this.xRange + ", ";
+	   str = str + "\"yRange\":" + this.yRange + ", ";
+	   str = str + "\"distBtwCenters\":" + this.distBtwCenters + ", ";
+       str = str + "\"blkPixPercent\":" + this.blkPixPercent + ", ";
+       str = str + "\"sumPix\":" + this.sumPix + ", ";
+       str = str + "\"sdHoriz\":" + this.sdHoriz + ", ";
+       str = str + "\"sdVert\":" + this.sdVert + ", ";
+       str = str + "\"sdPix\":" + this.sdPix + ", ";
+       str = str + "\"enclosed\":" + this.enclosed + ", ";
+       str = str + "\"percentEnclosed\":" + this.percentEnclosed + ", ";
+       str = str + "\"HistH\":" + this.histH.toJsonString() + ", ";
+       str = str + "\"HistV\":" + this.histV.toJsonString();
+	   str += "}";
+	   return str;
    }
 }
 
