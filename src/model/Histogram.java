@@ -36,4 +36,14 @@ public class Histogram {
     	str += "]";
     	return str;
     }
+    
+    public String toCsvString() {
+    	String str = "";
+    	for (int i = 0; i < this.size - 1; i++) {
+    		str += this.bins[i];
+    		str += ",";
+    	}
+    	str += this.bins[this.size - 1];
+    	return str;
+    }
 }

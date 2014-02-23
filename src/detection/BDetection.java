@@ -20,7 +20,7 @@ import imageUtil.*;
 import model.*;
 
 public class BDetection {
-   static final int NUM_SEEDS = 5;
+   static final int NUM_SEEDS = 10;
    static final int BW_THRESHOLD = 155; //225
    static final int MAX_GAP = 5;
    static final int RADIUS = 3; //3
@@ -571,7 +571,7 @@ public class BDetection {
       ArrayList<Seed> seeds = new ArrayList<Seed>();
       int idx = 0;
       int marker = 2; //mark pixel with number greater than 1
-      int i = 0;
+      int i = 0, j = 0;
       //int numSeeds = 3;
       final int width = this.width;
       final int height = this.height;
@@ -580,7 +580,7 @@ public class BDetection {
       int maxIdx = 0;
       Integer[] candidates = new Integer[NUM_SEEDS];
       for (RegionGroup group : this.textgroup) {
-    	  i = 0;
+    	  i = 0; j = 0;
     	  maxVal = 0;
     	  maxIdx = 0;
          if (group.getMembers().size() > 0) {
@@ -592,7 +592,7 @@ public class BDetection {
             y = ((group.maxY + group.minY) / 2);
             idx = y * width + x;
             while(i++ < NUM_SEEDS) {
-            	while(!checkPixel(this.pixels, idx, width, height, 3)) { //  && i++ < 1000
+            	while(!checkPixel(this.pixels, idx, width, height, 3) && j++ < 1000) { //  && i++ < 1000
             		x = BDetection.randomWithRange(group.minX, (group.maxX + group.minX) / 2);
             		y = BDetection.randomWithRange(group.minY, (group.maxY + group.minY) / 2);
             		//y++; 
@@ -2633,15 +2633,24 @@ public class BDetection {
    
    public static void exportFeatureSet(ArrayList<BDetection> bds, String filename) {
 	   PrintWriter writer;
-	   //String str = "";
+	   String str = "";
+	   int idx = 0;
 	   try {
 		   writer = new PrintWriter(filename, "UTF-8");
+		   str = "";
 		   for (int i=0; i < bds.size(); i++) {
-			   writer.println("{\"filename\":" + bds.get(i).filename);
+			   //str = "{\"filename\":\"" + bds.get(i).filename + "\", \"regions\":[";
+			   //writer.println("{\"filename\":" + bds.get(i).filename);
 			   for (RegionInfo r : bds.get(i).pixCounts) {
-				   writer.println(r.toJsonString());
+				   //writer.println(r.toJsonString());
+				   //str = str + r.toJsonString() + ",";
+				   writer.println("\""+ bds.get(i).filename + "\", " + r.toCSV());
 			   }
-			   writer.println("}");
+			   //idx = str.lastIndexOf(",");
+			   //if (idx >= 0)
+				   //str = str.substring(0, idx);
+
+			   //writer.println(str + "]}");
 		   }
 		   writer.close();
 	   } catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -2688,7 +2697,7 @@ public class BDetection {
          bds.add(bd);
       }
       BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      BDetection.exportFeatureSet(bds, "featureSet.json");
+      BDetection.exportFeatureSet(bds, "featureSet.csv");
    }
 }
 

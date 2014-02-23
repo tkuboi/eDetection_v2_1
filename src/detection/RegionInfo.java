@@ -173,6 +173,7 @@ public class RegionInfo {
 	   String str = "{";
 	   str = str + "\"marker\":" + this.marker + ",";
        str = str + "\"isBubble\":" + this.isBubble + ", ";
+       str = str + "\"features\":{";
 	   str = str + "\"pixCount\":" + this.pixCount + ", ";
 	   str = str + "\"minX\":" + this.minX + ", ";
 	   str = str + "\"minY\":" + this.minY + ", ";
@@ -188,11 +189,39 @@ public class RegionInfo {
        str = str + "\"sdPix\":" + this.sdPix + ", ";
        str = str + "\"enclosed\":" + this.enclosed + ", ";
        str = str + "\"percentEnclosed\":" + this.percentEnclosed + ", ";
-       str = str + "\"percentArea\":" + this.percentArea + ", ";
+       str = str + "\"percentArea\":" + this.percentArea;// + ", ";
        //str = str + "\"HistR\":" + this.histR.toJsonString() + ", ";
-       str = str + "\"HistH\":" + this.histH.toJsonString() + ", ";
-       str = str + "\"HistV\":" + this.histV.toJsonString();
+       //str = str + "\"HistH\":" + this.histH.toJsonString() + ", ";
+       //str = str + "\"HistV\":" + this.histV.toJsonString();
 	   str += "}";
+	   str += "}";
+	   return str;
+   }
+   
+   public String toCSV() {
+	   String str = "";
+	   str = str + this.marker + ",";
+       str = str + this.isBubble + ", ";
+	   str = str + this.minX + ", ";
+	   str = str + this.minY + ", ";
+	   str = str + this.maxX + ", ";
+	   str = str + this.maxY + ", ";
+	   str = str + this.pixCount + ", ";
+	   str = str + this.xRange + ", ";
+	   str = str + this.yRange + ", ";
+	   str = str + this.distBtwCenters + ", ";
+       str = str + this.blkPixPercent + ", ";
+       str = str + this.sumPix + ", ";
+       str = str + this.sdHoriz + ", ";
+       str = str + this.sdVert + ", ";
+       str = str + this.sdPix + ", ";
+       str = str + this.enclosed + ", ";
+       str = str + this.percentEnclosed + ", ";
+       str = str + this.percentArea;// + ", ";
+       //str = str + "\"HistR\":" + this.histR.toJsonString() + ", ";
+       str = str + this.histH.toCsvString() + ", ";
+       str = str + this.histV.toCsvString();
+	   
 	   return str;
    }
 }
