@@ -31,7 +31,7 @@ public class RegionInfo {
    public ArrayList<Integer> pixels;
    public Histogram histV;
    public Histogram histH;
-   public Histogram2D histR;
+   public Histogram histR;
 
    public RegionInfo(int m, int n, int x1, int x2, int y1, int y2) {
          this.marker = m;
@@ -218,10 +218,10 @@ public class RegionInfo {
        str = str + this.enclosed + ", ";
        str = str + this.percentEnclosed + ", ";
        str = str + this.percentArea + ", ";
-       //str = str + this.histR.toCsvString() + ", ";
        str = str + this.histH.toCsvString() + ", ";
-       str = str + this.histV.toCsvString();
-	   
+       str = str + this.histV.toCsvString() + ", ";
+       str = str + this.histR.toCsvString();
+
 	   return str;
    }
    
@@ -246,26 +246,50 @@ public class RegionInfo {
 	   labels = labels + "percentEnclosed, ";
 	   labels = labels + "percentArea, ";
        //labels = labels + this.histR.toCsvString() + ", ";
-	   labels = labels + "histH_1, ";
-	   labels = labels + "histH_2, ";
-	   labels = labels + "histH_3, ";
-	   labels = labels + "histH_4, ";
-	   labels = labels + "histH_5, ";
-	   labels = labels + "histH_6, ";
-	   labels = labels + "histH_7, ";
-	   labels = labels + "histH_8, ";
-	   labels = labels + "histH_9, ";
-	   labels = labels + "histH_10, ";
-	   labels = labels + "histV_1, ";
-	   labels = labels + "histV_2, ";
-	   labels = labels + "histV_3, ";
-	   labels = labels + "histV_4, ";
-	   labels = labels + "histV_5, ";
-	   labels = labels + "histV_6, ";
-	   labels = labels + "histV_7, ";
-	   labels = labels + "histV_8, ";
-	   labels = labels + "histV_9, ";
-	   labels = labels + "histV_10";
+	   labels = labels + "histH_1,";
+	   labels = labels + "histH_2,";
+	   labels = labels + "histH_3,";
+	   labels = labels + "histH_4,";
+	   labels = labels + "histH_5,";
+	   labels = labels + "histH_6,";
+	   labels = labels + "histH_7,";
+	   labels = labels + "histH_8,";
+	   labels = labels + "histH_9,";
+	   labels = labels + "histH_10,";
+	   labels = labels + "histV_1,";
+	   labels = labels + "histV_2,";
+	   labels = labels + "histV_3,";
+	   labels = labels + "histV_4,";
+	   labels = labels + "histV_5,";
+	   labels = labels + "histV_6,";
+	   labels = labels + "histV_7,";
+	   labels = labels + "histV_8,";
+	   labels = labels + "histV_9,";
+	   labels = labels + "histV_10,";
+	   labels = labels + "histR_1,";
+	   labels = labels + "histR_2,";
+	   labels = labels + "histR_3,";
+	   labels = labels + "histR_4,";
+	   labels = labels + "histR_5,";
+	   labels = labels + "histR_6,";
+	   labels = labels + "histR_7,";
+	   labels = labels + "histR_8,";
+	   labels = labels + "histR_9,";
+	   labels = labels + "histR_10,";
+	   labels = labels + "histR_11,";
+	   labels = labels + "histR_12,";
+	   labels = labels + "histR_13,";
+	   labels = labels + "histR_14,";
+	   labels = labels + "histR_15,";
+	   labels = labels + "histR_16,";
+	   labels = labels + "histR_17,";
+	   labels = labels + "histR_18,";
+	   labels = labels + "histR_19,";
+	   labels = labels + "histR_20,";
+	   labels = labels + "histR_21,";
+	   labels = labels + "histR_22,";
+	   labels = labels + "histR_23,";
+	   labels = labels + "histR_24";
 
 	   return labels;
    }

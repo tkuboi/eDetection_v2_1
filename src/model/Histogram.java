@@ -17,7 +17,11 @@ public class Histogram {
     	int i = (this.size - 1) * (v - this.min) / (this.max - this.min);
     	this.bins[i]++;
     }
-    
+
+    public void bin(int i, int v) {
+    	this.bins[i] = v;
+    }
+
     public int getSize() {
     	return this.size;
     }

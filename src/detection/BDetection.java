@@ -1078,13 +1078,13 @@ public class BDetection {
       }
    }
 
-   private Histogram2D buildHistR(RegionInfo region) {
+   private Histogram buildHistR(RegionInfo region) {
 	   int unitX = 15;
-	   int unitY = 20;
 	   int sizeX = 360 / unitX; //360 degrees
 	   int l = (int)(Math.sqrt(this.width * this.width + this.height * this.height)/2);
-	   int sizeY = 20;
-	   Histogram2D histR = new Histogram2D(sizeX, sizeY, 0, sizeX, 0, l);
+	   //int sizeY = 20;
+	   //Histogram2D histR = new Histogram2D(sizeX, sizeY, 0, sizeX, 0, l);
+	   Histogram histR = new Histogram(sizeX, 0, 360);
 	   int orgX = (region.maxX - region.minX) / 2;
 	   int orgY = (region.maxY - region.minY) / 2;
 	   //rho = cos()x + sin()y;
@@ -1102,9 +1102,11 @@ public class BDetection {
 				   val = this.blackPixels[idx] & 0xff;
                    if (val >=2 && this.blackRegions.get(val - 2).type != 1)
 				       histR.bin(t, r);
+                   break;
 			   }
 			   else if (!isLegal(idx)) {
 				   histR.bin(t, r);
+				   break;
 			   }
 		   }
 	   }
@@ -2693,8 +2695,8 @@ public class BDetection {
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
       }
-      //BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      BDetection.exportFeatureSet(bds, "featureSet2.csv");
+      BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
+      BDetection.exportFeatureSet(bds, "featureSet.csv");
    }
 }
 
