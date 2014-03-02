@@ -217,12 +217,57 @@ public class RegionInfo {
        str = str + this.sdPix + ", ";
        str = str + this.enclosed + ", ";
        str = str + this.percentEnclosed + ", ";
-       str = str + this.percentArea;// + ", ";
-       //str = str + "\"HistR\":" + this.histR.toJsonString() + ", ";
+       str = str + this.percentArea + ", ";
+       //str = str + this.histR.toCsvString() + ", ";
        str = str + this.histH.toCsvString() + ", ";
        str = str + this.histV.toCsvString();
 	   
 	   return str;
+   }
+   
+   public static String labels() {
+	   String labels = "";
+	   labels = labels + "marker, ";
+	   labels = labels + "isBubble, ";
+	   labels = labels + "minX, ";
+	   labels = labels + "minY, ";
+	   labels = labels + "maxX, ";
+	   labels = labels + "maxY, ";
+	   labels = labels + "pixCount, ";
+	   labels = labels + "xRange, ";
+	   labels = labels + "yRange, ";
+	   labels = labels + "distBtwCenters, ";
+	   labels = labels + "blkPixPercent, ";
+	   labels = labels + "sumPix, ";
+	   labels = labels + "sdHoriz, ";
+	   labels = labels + "sdVert, ";
+	   labels = labels + "sdPix, ";
+	   labels = labels + "enclosed, ";
+	   labels = labels + "percentEnclosed, ";
+	   labels = labels + "percentArea, ";
+       //labels = labels + this.histR.toCsvString() + ", ";
+	   labels = labels + "histH_1, ";
+	   labels = labels + "histH_2, ";
+	   labels = labels + "histH_3, ";
+	   labels = labels + "histH_4, ";
+	   labels = labels + "histH_5, ";
+	   labels = labels + "histH_6, ";
+	   labels = labels + "histH_7, ";
+	   labels = labels + "histH_8, ";
+	   labels = labels + "histH_9, ";
+	   labels = labels + "histH_10, ";
+	   labels = labels + "histV_1, ";
+	   labels = labels + "histV_2, ";
+	   labels = labels + "histV_3, ";
+	   labels = labels + "histV_4, ";
+	   labels = labels + "histV_5, ";
+	   labels = labels + "histV_6, ";
+	   labels = labels + "histV_7, ";
+	   labels = labels + "histV_8, ";
+	   labels = labels + "histV_9, ";
+	   labels = labels + "histV_10";
+
+	   return labels;
    }
 }
 

@@ -48,4 +48,14 @@ public class Histogram2D {
     	str += "]";
     	return str;
     }
+    
+    public String toCsvString() {
+    	String str = "";
+    	for (int i = 0; i < this.sizeX * this.sizeY - 1; i++) {
+    		str += this.bins[i];
+    		str += ", ";
+    	}
+    	str += this.bins[this.sizeX * this.sizeY - 1];
+    	return str;
+    }
 }

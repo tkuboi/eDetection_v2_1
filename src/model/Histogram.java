@@ -41,7 +41,7 @@ public class Histogram {
     	String str = "";
     	for (int i = 0; i < this.size - 1; i++) {
     		str += this.bins[i];
-    		str += ",";
+    		str += ", ";
     	}
     	str += this.bins[this.size - 1];
     	return str;

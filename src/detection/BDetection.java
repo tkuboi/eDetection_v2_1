@@ -1079,9 +1079,12 @@ public class BDetection {
    }
 
    private Histogram2D buildHistR(RegionInfo region) {
-	   int sizeX = 360; //360 degrees
-	   int sizeY = (int)(Math.sqrt(this.width * this.width + this.height * this.height)/2);
-	   Histogram2D histR = new Histogram2D(sizeX, sizeY, 0, sizeX, 0, sizeY);
+	   int unitX = 15;
+	   int unitY = 20;
+	   int sizeX = 360 / unitX; //360 degrees
+	   int l = (int)(Math.sqrt(this.width * this.width + this.height * this.height)/2);
+	   int sizeY = 20;
+	   Histogram2D histR = new Histogram2D(sizeX, sizeY, 0, sizeX, 0, l);
 	   int orgX = (region.maxX - region.minX) / 2;
 	   int orgY = (region.maxY - region.minY) / 2;
 	   //rho = cos()x + sin()y;
@@ -1091,9 +1094,9 @@ public class BDetection {
 	   int idx = 0;
 	   int val = 0;
 	   for (int t = 0; t < sizeX; t++) {
-		   for (int r = 1; r < sizeY; r++) {
-			   x = orgX + (int) Math.floor(r * Math.cos(t*Math.PI/180));
-			   y = orgY + (int) Math.floor(r * Math.sin(t*Math.PI/180));
+		   for (int r = 1; r < l; r++) {
+			   x = orgX + (int) Math.floor(r * Math.cos(t*unitX*Math.PI/180));
+			   y = orgY + (int) Math.floor(r * Math.sin(t*unitX*Math.PI/180));
 			   idx = y * this.width + x;
 			   if (isLegal(idx) && this.pixels[idx*3] == (byte)0) {
 				   val = this.blackPixels[idx] & 0xff;
@@ -2403,26 +2406,28 @@ public class BDetection {
       Color color = new Color();
       int idx = 0;
       int val = 0;
-      for(int i = 0; i < this.height * this.width * 3; i+=3) {
-         val = this.pixels[i] & 0xff;
+      for(int i = 0; i < this.height * this.width; i++) {
+         val = this.pixels[i*3] & 0xff;
          //if (val > 1)
          //   System.out.println("is bubble=" + this.pixCounts.get(val-2).isBubble);
          if (val > 1 && this.pixCounts.get(val-2).isBubble) {
             BDetection.pickColor(val, color);
-            blob[i] = color.r;
-            blob[i+1] = color.g;
-            blob[i+2] = color.b;
+            blob[i*3] = color.r;
+            blob[i*3+1] = color.g;
+            blob[i*3+2] = color.b;
+            //System.out.println("val=" + val + " and bubble="+this.pixCounts.get(val-2).isBubble);
          }
          else if (val >= 1) {
             BDetection.pickColor(1, color);
-            blob[i] = color.r;
-            blob[i+1] = color.g;
-            blob[i+2] = color.b;
+            blob[i*3] = color.r;
+            blob[i*3+1] = color.g;
+            blob[i*3+2] = color.b;
+            //System.out.println("val=" + val + " blob=" + (color.r&0xff));
          }
          else {
-            blob[i] = 0;
-            blob[i + 1] = 0;
-            blob[i + 2] = 0;
+            blob[i*3] = (byte)0;
+            blob[i*3 + 1] = (byte)0;
+            blob[i*3 + 2] = (byte)0;
          }
       }
       return blob;
@@ -2499,8 +2504,8 @@ public class BDetection {
       byte[] blob = fillRegions();
       try {
          MagickImage blobImage = new MagickImage();
-         blobImage.constituteImage(width,
-                                   height,
+         blobImage.constituteImage(this.width,
+                                   this.height,
                                    "RGB",
                                    blob);
          blobImage.setFileName(fname);
@@ -2637,20 +2642,12 @@ public class BDetection {
 	   int idx = 0;
 	   try {
 		   writer = new PrintWriter(filename, "UTF-8");
+		   writer.println("filename, " + RegionInfo.labels());
 		   str = "";
 		   for (int i=0; i < bds.size(); i++) {
-			   //str = "{\"filename\":\"" + bds.get(i).filename + "\", \"regions\":[";
-			   //writer.println("{\"filename\":" + bds.get(i).filename);
 			   for (RegionInfo r : bds.get(i).pixCounts) {
-				   //writer.println(r.toJsonString());
-				   //str = str + r.toJsonString() + ",";
 				   writer.println("\""+ bds.get(i).filename + "\", " + r.toCSV());
 			   }
-			   //idx = str.lastIndexOf(",");
-			   //if (idx >= 0)
-				   //str = str.substring(0, idx);
-
-			   //writer.println(str + "]}");
 		   }
 		   writer.close();
 	   } catch (FileNotFoundException | UnsupportedEncodingException e) {
@@ -2696,8 +2693,8 @@ public class BDetection {
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
       }
-      BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      BDetection.exportFeatureSet(bds, "featureSet.csv");
+      //BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
+      BDetection.exportFeatureSet(bds, "featureSet2.csv");
    }
 }
 
