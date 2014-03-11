@@ -17,6 +17,13 @@ public class RegionInfo {
    public int yRange;
    public int type; // 0:unknown, 1:text, 2:line
    public int textGroup;
+   public int isAreaLessThanMax;
+   public int isAreaMoreThanMin;
+   public int isXLessThanMax;
+   public int isYLessThanMax;
+   public int isRegionEnclosed;
+   public int isPixCountMoreThanMin;
+   public int isDistBtwCentersLessThanMax;
    public double blkPixPercent;
    public double sumPix;
    public double sdHoriz;
@@ -25,6 +32,7 @@ public class RegionInfo {
    public double percentEnclosed; // percentage enclosed by bubble (black pixels)
    public double distBtwCenters;
    public double percentArea;
+   public double bpRatio;
    public boolean isBubble;
    public boolean enclosed;  // whether or not the region is enclosed
    public RegionGroup rg;
@@ -42,6 +50,13 @@ public class RegionInfo {
          this.maxY = y2;
          this.xRange = x2 - x1 + 1;
          this.yRange = y2 - y1 + 1;
+         this.isAreaLessThanMax = 0;
+         this.isAreaMoreThanMin = 0;
+         this.isXLessThanMax = 0;
+         this.isYLessThanMax = 0;
+         this.isRegionEnclosed = 0;
+         this.isPixCountMoreThanMin = 0;
+         this.isDistBtwCentersLessThanMax = 0;
          this.blkPixPercent = 0.0;
          this.sumPix = 0.0;
          this.sdHoriz = 0.0;
@@ -70,6 +85,13 @@ public class RegionInfo {
          this.maxY = y2;
          this.xRange = x2 - x1 + 1;
          this.yRange = y2 - y1 + 1;
+         this.isAreaLessThanMax = 0;
+         this.isAreaMoreThanMin = 0;
+         this.isXLessThanMax = 0;
+         this.isYLessThanMax = 0;
+         this.isRegionEnclosed = 0;
+         this.isPixCountMoreThanMin = 0;
+         this.isDistBtwCentersLessThanMax = 0;
          this.blkPixPercent = 0.0;
          this.sumPix = 0.0;
          this.sdHoriz = 0.0;
@@ -98,6 +120,13 @@ public class RegionInfo {
          this.maxY = y2;
          this.xRange = x2 - x1 + 1;
          this.yRange = y2 - y1 + 1;
+         this.isAreaLessThanMax = 0;
+         this.isAreaMoreThanMin = 0;
+         this.isXLessThanMax = 0;
+         this.isYLessThanMax = 0;
+         this.isRegionEnclosed = 0;
+         this.isPixCountMoreThanMin = 0;
+         this.isDistBtwCentersLessThanMax = 0;
          this.blkPixPercent = 0.0;
          this.sumPix = 0.0;
          this.sdHoriz = 0.0;
@@ -126,6 +155,13 @@ public class RegionInfo {
        this.maxY = y2;
        this.xRange = x2 - x1 + 1;
        this.yRange = y2 - y1 + 1;
+       this.isAreaLessThanMax = 0;
+       this.isAreaMoreThanMin = 0;
+       this.isXLessThanMax = 0;
+       this.isYLessThanMax = 0;
+       this.isRegionEnclosed = 0;
+       this.isPixCountMoreThanMin = 0;
+       this.isDistBtwCentersLessThanMax = 0;
        this.blkPixPercent = 0.0;
        this.sumPix = 0.0;
        this.sdHoriz = 0.0;
@@ -209,6 +245,13 @@ public class RegionInfo {
 	   str = str + this.pixCount + ", ";
 	   str = str + this.xRange + ", ";
 	   str = str + this.yRange + ", ";
+	   str = str + this.isAreaLessThanMax + ", ";
+	   str = str + this.isAreaMoreThanMin + ", ";
+	   str = str + this.isXLessThanMax + ", ";
+	   str = str + this.isYLessThanMax + ", ";
+	   str = str + this.isRegionEnclosed + ", ";
+	   str = str + this.isPixCountMoreThanMin + ", ";
+	   str = str + this.isDistBtwCentersLessThanMax + ", ";
 	   str = str + this.distBtwCenters + ", ";
        str = str + this.blkPixPercent + ", ";
        str = str + this.sumPix + ", ";
@@ -236,6 +279,13 @@ public class RegionInfo {
 	   labels = labels + "pixCount, ";
 	   labels = labels + "xRange, ";
 	   labels = labels + "yRange, ";
+	   labels = labels + "isAreaLessThanMax" + ", ";
+	   labels = labels + "isAreaMoreThanMin" + ", ";
+	   labels = labels + "isXLessThanMax" + ", ";
+	   labels = labels + "isYLessThanMax" + ", ";
+	   labels = labels + "isRegionEnclosed" + ", ";
+	   labels = labels + "isPixCountMoreThanMin" + ", ";
+	   labels = labels + "isDistBtwCentersLessThanMax" + ", ";
 	   labels = labels + "distBtwCenters, ";
 	   labels = labels + "blkPixPercent, ";
 	   labels = labels + "sumPix, ";

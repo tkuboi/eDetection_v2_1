@@ -1065,7 +1065,16 @@ public class BDetection {
              && (region.enclosed || region.percentEnclosed > 0.83)
              && region.pixCount > 6000
              && region.distBtwCenters < 57.4) {
+        	region.isAreaLessThanMax = 1;
+        	region.isAreaMoreThanMin = 1;
+        	region.isXLessThanMax = 1;
+        	region.isYLessThanMax = 1;
+        	region.isRegionEnclosed = 1;
+        	region.isPixCountMoreThanMin = 1;
+        	region.isDistBtwCentersLessThanMax = 1;
+        	 
             bpRatio = calcAverageBW(region);
+            region.bpRatio = bpRatio;
             if (bpRatio > 0.059) {
                region.isBubble = true;
             }
@@ -2666,7 +2675,8 @@ public class BDetection {
    }
    
    public static void main(String[] args) {
-      String path = "./TrainingSet/images/";
+      //String path = "./TrainingSet/images/";
+	  String path = "./image_0670/";
       File dir = new File(path);
       File[] files = dir.listFiles(new FilenameFilter() {
     	    public boolean accept(File directory, String fileName) {
@@ -2695,8 +2705,8 @@ public class BDetection {
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
       }
-      BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      BDetection.exportFeatureSet(bds, "featureSet.csv");
+      //BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
+      BDetection.exportFeatureSet(bds, "featureSet2.csv");
    }
 }
 
