@@ -2624,6 +2624,9 @@ public class BDetection {
 						   if (textOutput)
 						      bds.get(i).extractText(r);
 					   }
+					   else {
+						   r.isBubble = false;
+					   }
 					   j++;
 				   }
 				   if (cont) {
