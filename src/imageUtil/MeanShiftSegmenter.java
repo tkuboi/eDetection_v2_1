@@ -11,7 +11,7 @@ import model.Color;
 import model.NaiveBin;
 
 public class MeanShiftSegmenter {
-   private static final double THRESHOLD = 1.0;
+   private static final double THRESHOLD = 0.001;
    private static final int MAX_ITERATIONS = 20;
    public static byte[] segment(byte[] pixels, int width, int height, double h) {
 	   NaiveBin<Integer> bins_r = new NaiveBin<Integer>(256);
@@ -30,13 +30,16 @@ public class MeanShiftSegmenter {
    private static Color[] meanShift(byte[] pixels, int width, int height, double h,
 		   NaiveBin<Integer> bins_r, NaiveBin<Integer> bins_g, NaiveBin<Integer> bins_b) {
 	   Color[] centers = new Color[width * height];
-	   Color new_center;
-	   Color old_center;
+	   double[] new_center = new double[3];
+	   double[] old_center = new double[3];
 	   int iterations = 0;
+	   int r, g, b;
 	   double distance;
 	   boolean converged = false;
 	   for (int i = 0; i < width*height; i++) {
-		   new_center = new Color(pixels[i*3], pixels[i*3+1], pixels[i*3+2]);
+		   new_center[0] = pixels[i*3]&0xff;
+		   new_center[1] = pixels[i*3+1]&0xff;
+		   new_center[2] = pixels[i*3+2]&0xff;
 		   converged = false;
 		   iterations = 0;
 		   while(!converged) {
@@ -50,23 +53,26 @@ public class MeanShiftSegmenter {
 			   //System.out.println("iterations="+iterations);
 			   converged = (isConverged(new_center, old_center, THRESHOLD) || iterations >= MAX_ITERATIONS);
 		   }
-		   centers[i] = new_center;
+		   r = (int) new_center[0];
+		   g = (int) new_center[1];
+		   b = (int) new_center[2];
+		   centers[i] = new Color((byte)r, (byte)g, (byte)b);
 		   System.out.println("iterations="+iterations);
 	   }
 	   return centers;
    }
    
-   private static ArrayList<Color> getPoints(byte[] pixels, Color center, double h,
+   private static ArrayList<Color> getPoints(byte[] pixels, double[] new_center, double h,
 		   NaiveBin<Integer> bins_r, NaiveBin<Integer> bins_g, NaiveBin<Integer> bins_b) {
 	   ArrayList<Color> points = new ArrayList<Color>();
-	   int min_r = (int) (center.r - h >= 0 ? center.r - h : 0);
-	   int max_r = (int) (center.r + h);	
+	   int min_r = (int) (new_center[0] - h >= 0 ? new_center[0] - h : 0);
+	   int max_r = (int) (new_center[0] + h);	
 	   ArrayList<Integer> list_r = bins_r.get(min_r, max_r);
-	   int min_g = (int) (center.g - h >= 0 ? center.g - h : 0);
-	   int max_g = (int) (center.g + h);	
+	   int min_g = (int) (new_center[1] - h >= 0 ? new_center[1] - h : 0);
+	   int max_g = (int) (new_center[1] + h);	
 	   ArrayList<Integer> list_g = bins_g.get(min_g, max_g);
-	   int min_b = (int) (center.b - h >= 0 ? center.b - h : 0);
-	   int max_b = (int) (center.b + h);	
+	   int min_b = (int) (new_center[2] - h >= 0 ? new_center[2] - h : 0);
+	   int max_b = (int) (new_center[2] + h);	
 	   ArrayList<Integer> list_b = bins_b.get(min_b, max_b);
 	   
 	   for (Integer j : list_r) {
@@ -85,14 +91,15 @@ public class MeanShiftSegmenter {
 	   return result;
    }
   
-   private static double calcDiff(Color new_center, Color old_center) {
-	   double result = (new_center.r - old_center.r)^2 + (new_center.g - old_center.g)^2
-			   + (new_center.b - old_center.b)^2;
+   private static double calcDiff(double[] new_center, double[] old_center) {
+	   double result = (new_center[0] - old_center[0])*(new_center[0] - old_center[0])
+			   + (new_center[1] - old_center[1])*(new_center[1] - old_center[1])
+			   + (new_center[2] - old_center[2])*(new_center[2] - old_center[2]);
 	   return Math.sqrt(result);
    }
 
-   private static Color flatKernelUpdate(Color center, ArrayList<Color> points, double h) {
-	   Color mean = new Color();
+   private static double[] flatKernelUpdate(double[] old_center, ArrayList<Color> points, double h) {
+	   double[] mean = new double[3];
 	   double size = points.size();
 	   //System.out.println("size="+size);
 	   double sum_r = 0;
@@ -104,14 +111,14 @@ public class MeanShiftSegmenter {
 		   sum_b = sum_b + (point.b&0xff);
 		   //System.out.println("("+(point.r&0xff)+", "+(point.g&0xff)+", "+(point.b&0xff)+")");
 	   }
-	   mean.r = (byte)(sum_r / size);
-	   mean.g = (byte)(sum_g / size);
-	   mean.b = (byte)(sum_b / size);
+	   mean[0] = (sum_r / size);
+	   mean[1] = (sum_g / size);
+	   mean[2] = (sum_b / size);
 	   //System.out.println("("+sum_r+", "+sum_g+", "+sum_b+")");
 	   return mean;
    }
    
-   private static boolean isConverged(Color new_center, Color old_center, double threshold) {
+   private static boolean isConverged(double[] new_center, double[] old_center, double threshold) {
 	   boolean converged = false;
 	   if (calcDiff(new_center, old_center) <= threshold)
 		   converged = true;
@@ -131,7 +138,7 @@ public class MeanShiftSegmenter {
    public static void main(String[] args) {
 	   String filename = "COPACABANA_2009.jpg";
 	   String output = "segmented.jpg";
-	   double h = 3.0;
+	   double h = 10.0;
 	      try {
 	          ImageInfo ii = new ImageInfo(filename); 
 	          MagickImage image = new MagickImage(ii);
