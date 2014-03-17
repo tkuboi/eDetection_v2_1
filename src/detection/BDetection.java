@@ -2678,8 +2678,8 @@ public class BDetection {
    }
    
    public static void main(String[] args) {
-      //String path = "./TrainingSet/images/";
-	  String path = "./image_0670/";
+      String path = "./TrainingSet/images/";
+	  //String path = "./image_0670/";
       File dir = new File(path);
       File[] files = dir.listFiles(new FilenameFilter() {
     	    public boolean accept(File directory, String fileName) {
@@ -2708,8 +2708,8 @@ public class BDetection {
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
       }
-      //BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      BDetection.exportFeatureSet(bds, "featureSet2.csv");
+      BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
+      BDetection.exportFeatureSet(bds, "featureSet.csv");
    }
 }
 
