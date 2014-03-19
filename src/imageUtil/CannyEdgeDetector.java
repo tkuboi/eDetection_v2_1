@@ -100,7 +100,7 @@ public class CannyEdgeDetector {
                     pixels);
 	        byte[] gray = Conversion.rgb2gray(pixels, width, height);
 			byte[] edgemap = CannyEdgeDetector.genEdgeMap(gray, width, height, t);
-			HoughTransform transform = new HoughTransform(180, 10, edgemap, width, height);
+			HoughTransform transform = new HoughTransform(180, 1, edgemap, width, height);
 			transform.findLines();
 			edgemap = transform.pickAndDrwaLines(hough_t);
 			byte[] rgbimg = new byte[width*height*3];

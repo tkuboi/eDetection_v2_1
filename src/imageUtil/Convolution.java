@@ -140,9 +140,9 @@ public class Convolution {
 					   }
 				   }
 			   }
-			   score1 = (score1 < 0 ? score1 * (-1) : score1);
-			   score2 = (score2 < 0 ? score2 * (-1) : score2);
-			   score = score1 + score2;
+			   //score1 = (score1 < 0 ? score1 * (-1) : score1);
+			   //score2 = (score2 < 0 ? score2 * (-1) : score2);
+			   score = Math.abs(score1) + Math.abs(score2);
 			   if (score >= t) {
 				   response[row * width + col] = new GradInfo(score, Math.atan2(score1, score2));
 				   if (score > max)
