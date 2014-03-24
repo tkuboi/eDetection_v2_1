@@ -122,34 +122,30 @@ public class Convolution {
 	   int score = 0;
 	   int score1 = 0;
 	   int score2 = 0;
+	   byte[] pixels = copyPixels(grayimg, width, height); // repeat pixels on the edge
 	   GradInfo[] response = new GradInfo[width * height];
 	   int span = x / 2;
-	   for (int row = 0; row < height; row++) {
-		   for (int col = 0; col < width; col++) {
+	   for (int row = 1; row < height + 1; row++) {
+		   for (int col = 1; col < width + 1; col++) {
 			   score = 0;
 			   score1 = 0;
 			   score2 = 0;
 			   for (int m = 0; m < y; m++) {
 				   for (int n = 0; n < x; n++) {
-					   idx = (row - span + m) * width + col - span + n;
-					   if (row - span + m >= 0 && row - span + m < height
-							   && col - span + n >= 0 && col - span + n < width) {
-						   idx2 = m * x + n;
-						   score1 += (0xFF & grayimg[idx]) * kernel1[idx2];
-						   score2 += (0xFF & grayimg[idx]) * kernel2[idx2];
-					   }
+					   idx = (row - span + m) * (width+2) + col - span + n;
+					   idx2 = m * x + n;
+					   score1 += (0xFF & pixels[idx]) * kernel1[idx2];
+					   score2 += (0xFF & pixels[idx]) * kernel2[idx2];
 				   }
 			   }
-			   //score1 = (score1 < 0 ? score1 * (-1) : score1);
-			   //score2 = (score2 < 0 ? score2 * (-1) : score2);
 			   score = Math.abs(score1) + Math.abs(score2);
 			   if (score >= t) {
-				   response[row * width + col] = new GradInfo(score, Math.atan2(score1, score2));
+				   response[(row - 1) * width + col - 1] = new GradInfo(score, Math.atan2(score1, score2));
 				   if (score > max)
 					   max = score;
 			   }
 			   else {
-				   response[row * width + col] = new GradInfo(0, 0);
+				   response[(row - 1) * width + col - 1] = new GradInfo(0, 0);
 			   }
 		   }
 	   }
@@ -231,6 +227,24 @@ public class Convolution {
 		   }
 	   }
 	   return sum / count;
+   }
+   
+   private static byte[] copyPixels(byte[] img, int width, int height) {
+	   byte[] pixels = new byte[(width + 2) * (height + 2)];
+	   for (int row = 0; row < height; row++) {
+		   for (int col = 0; col < width; col++) {
+			   pixels[(row + 1) * (width + 2) + col + 1] = img[row * width + col];
+		   }
+	   }
+	   for (int row = 0; row < height + 2; row++) {
+		   pixels[row * (width+2)] = pixels[row * (width+2) + 1];
+		   pixels[row * (width+2) + width + 1] = pixels[row * (width+2) + width];
+	   }
+	   for (int col = 0; col < width + 2; col++) {
+		   pixels[col] = pixels[(width + 2) + col];
+		   pixels[(height+1) * (width + 2) + col] = pixels[height * (width + 2) + col];
+	   }
+	   return pixels;
    }
 }
 

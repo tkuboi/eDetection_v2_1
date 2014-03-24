@@ -100,9 +100,8 @@ public class CannyEdgeDetector {
                     pixels);
 	        byte[] gray = Conversion.rgb2gray(pixels, width, height);
 			byte[] edgemap = CannyEdgeDetector.genEdgeMap(gray, width, height, t);
-			HoughTransform transform = new HoughTransform(180, 1, edgemap, width, height);
-			transform.findLines();
-			edgemap = transform.pickAndDrwaLines(hough_t);
+			HoughTransform transform = new HoughTransform(1, 1, edgemap, width, height);
+			edgemap = transform.transform(hough_t);
 			byte[] rgbimg = new byte[width*height*3];
 			for (int i = 0; i < width*height; i++) {
 				if ((0xFF & edgemap[i]) == 2) {
@@ -125,13 +124,6 @@ public class CannyEdgeDetector {
 			blobImage.setFileName("result.jpg");
 			blobImage.writeImage(new ImageInfo());
 			
-			MagickImage spaceImage = new MagickImage();
-			spaceImage.constituteImage(2*(width/10),
-					180,
-					"RGB",
-					transform.getSpaceImg());
-			spaceImage.setFileName("space.jpg");
-			spaceImage.writeImage(new ImageInfo());
 		}
 		catch(MagickException e) {
 	         e.printStackTrace();
