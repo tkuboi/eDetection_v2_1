@@ -38,9 +38,9 @@ public class HoughTransform {
    public HoughTransform(int unit_t, int unit_r, byte[] img, int width, int height) {
 	   this.unit_t = unit_t;
 	   this.unit_r = unit_r;
-	   this.size_t = (int)((180 + 1) / unit_t);
+	   this.size_t = (int)((360) / unit_t);
 	   this.size_r = (int)(Math.sqrt(width*width + height*height) / this.unit_r);
-	   this.accumulator = new Points[2 * size_r][size_t];
+	   this.accumulator = new Points[size_r][size_t];
 	   this.pixels = img;
 	   this.width = width;
 	   this.height = height;
@@ -63,11 +63,11 @@ public class HoughTransform {
 	   for (int t = 0; t < this.size_t; t++) {
 		   theta = Math.PI * t * this.unit_t / 180;
 		   rho = (x * Math.cos(theta) + y * Math.sin(theta)) / this.unit_r;
-           if (rho >= -1 * this.size_r && rho < this.size_r) {
+           if (rho >= 0 && rho < this.size_r) {
         	   //System.out.println("rho=" + (rho + this.size_r) + "t=" + t);
-        	   if (this.accumulator[(int)(rho + this.size_r)][t] == null)
-        		   this.accumulator[(int)(rho + this.size_r)][t] = new Points();
-		       this.accumulator[(int)(rho + this.size_r)][t].points.add(this.width * y + x);
+        	   if (this.accumulator[(int)(rho)][t] == null)
+        		   this.accumulator[(int)(rho)][t] = new Points();
+		       this.accumulator[(int)(rho)][t].points.add(this.width * y + x);
            }
 	   }
    }
@@ -79,7 +79,7 @@ public class HoughTransform {
 	   for (int j=0; j < num; j++)
 		   order[j] = 0;
 	   for (int t = 0; t < size_t; t++) {
-		   for (int r = 0; r < 2 * size_r; r++) {
+		   for (int r = 0; r < size_r; r++) {
 			   i = 0;
 			   while(i < num && (this.accumulator[r][t] == null || this.accumulator[r][t].points.size() <= order[i]))
 				   i++;
@@ -94,7 +94,7 @@ public class HoughTransform {
 	   int threshold = order[num-1];
 	   System.out.println("threshold=" + threshold);
 	   ArrayList<Vector> list = new ArrayList<Vector>();
-	   for (int r = 0; r < 2 * this.size_r; r++) {
+	   for (int r = 0; r < this.size_r; r++) {
 		   for (int t = 0; t < this.size_t; t++) {
 			   if (this.accumulator[r][t] != null && max < this.accumulator[r][t].points.size())
 				   max = this.accumulator[r][t].points.size();
@@ -126,7 +126,7 @@ public class HoughTransform {
 		   }
 		   System.out.println("(" + x1 + " < " + x2 + ")");
 		   double theta = Math.PI * (v.t * this.unit_t) / 180;
-		   double a = -1 * Math.cos(theta) / Math.sin(theta), b = ((v.r- size_r) * this.unit_r)/Math.sin(theta);
+		   double a = -1 * Math.cos(theta) / Math.sin(theta), b = ((v.r) * this.unit_r)/Math.sin(theta);
 		   for (int x = x1; x <= x2; x++) {
 			   y = (int)(a*x + b);
 			   if (y < this.height && 0 <= y)
