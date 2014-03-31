@@ -38,6 +38,10 @@ public class NaiveBin<T> {
 		System.out.println("size=" + this.bins.length);
 	}
 	
+	public int getNumBins() {
+		return this.numBins;
+	}
+	
 	@SuppressWarnings("unchecked")
 	public void put(T element, int val) {
 		this.bins[val].add(element);
