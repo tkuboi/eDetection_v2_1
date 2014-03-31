@@ -14,38 +14,42 @@ public class MeanShiftSegmenter {
    private static final double THRESHOLD = 0.0001;
    private static final int MAX_ITERATIONS = 100;
    public static byte[] segment(byte[] pixels, int width, int height, double h) {
-	   NaiveBin<Integer> bins_r = new NaiveBin<Integer>(256);
-	   NaiveBin<Integer> bins_g = new NaiveBin<Integer>(256);
-	   NaiveBin<Integer> bins_b = new NaiveBin<Integer>(256);
-	   for (int i = 0; i < width*height; i++) {
+	   //NaiveBin<Integer> bins_r = new NaiveBin<Integer>(256);
+	   //NaiveBin<Integer> bins_g = new NaiveBin<Integer>(256);
+	   //NaiveBin<Integer> bins_b = new NaiveBin<Integer>(256);
+	   int max = 256 * 256 * 256;
+	   int binSize = (int)h;
+	   NaiveBin<Integer> bins = binPoints(pixels, width, height, max, binSize);
+	   ArrayList<Integer> seeds = selectSeeds(bins, max, binSize, 1);
+	   /*for (int i = 0; i < width*height; i++) {
 		   bins_r.put(i, (pixels[i*3]&0xff));
 		   bins_g.put(i, (pixels[i*3+1]&0xff));
 		   bins_b.put(i, (pixels[i*3+2]&0xff));
-	   }
-	   Color[] centers = meanShift(pixels, width, height, h, bins_r, bins_g, bins_b);
-	   byte[] map = clusterize(centers, width, height);
+	   }*/
+	   Color[] centers = meanShift(pixels, seeds, h, bins, binSize);
+	   byte[] map = clusterize(centers, seeds, bins, pixels, width, height, binSize);
 	   return map;
    }
    
-   private static Color[] meanShift(byte[] pixels, int width, int height, double h,
-		   NaiveBin<Integer> bins_r, NaiveBin<Integer> bins_g, NaiveBin<Integer> bins_b) {
-	   Color[] centers = new Color[width * height];
+   private static Color[] meanShift(byte[] pixels, ArrayList<Integer> seeds, double h, NaiveBin<Integer> bins, int binSize) {
+	   Color[] centers = new Color[seeds.size()];
 	   double[] new_center = new double[3];
 	   double[] old_center = new double[3];
 	   int iterations = 0;
 	   int r, g, b;
-	   double distance;
 	   boolean converged = false;
-	   int size = width * height;
+	   int size = seeds.size();
+	   int idx = 0;
 	   for (int i = 0; i < size; i++) {
 		   System.out.println("processing " + i + "/" + size + "th pixel..");
-		   new_center[0] = pixels[i*3]&0xff;
-		   new_center[1] = pixels[i*3+1]&0xff;
-		   new_center[2] = pixels[i*3+2]&0xff;
+		   idx = seeds.get(i);
+		   new_center[0] = pixels[idx*3]&0xff;
+		   new_center[1] = pixels[idx*3+1]&0xff;
+		   new_center[2] = pixels[idx*3+2]&0xff;
 		   converged = false;
 		   iterations = 0;
 		   while(!converged) {
-			   ArrayList<Color> points = getPoints(pixels, new_center, h, bins_r, bins_g, bins_b);
+			   ArrayList<Color> points = getPoints(pixels, new_center, h, bins, binSize);
 			   if (points.size() == 0)
 				   break;
 			   old_center = new_center;
@@ -65,22 +69,23 @@ public class MeanShiftSegmenter {
    }
    
    private static ArrayList<Color> getPoints(byte[] pixels, double[] new_center, double h,
-		   NaiveBin<Integer> bins_r, NaiveBin<Integer> bins_g, NaiveBin<Integer> bins_b) {
+		   NaiveBin<Integer> bins, int binSize) {
 	   //System.out.println("Searching for points..");
 	   ArrayList<Color> points = new ArrayList<Color>();
 	   int min_r = (int) (new_center[0] - h >= 0 ? new_center[0] - h : 0);
 	   int max_r = (int) (new_center[0] + h);	
-	   ArrayList<Integer> list_r = bins_r.get(min_r, max_r);
+	   //ArrayList<Integer> list_r = bins.get(min_r, max_r);
 	   int min_g = (int) (new_center[1] - h >= 0 ? new_center[1] - h : 0);
 	   int max_g = (int) (new_center[1] + h);	
-	   ArrayList<Integer> list_g = bins_g.get(min_g, max_g);
+	   //ArrayList<Integer> list_g = bins.get(min_g, max_g);
 	   int min_b = (int) (new_center[2] - h >= 0 ? new_center[2] - h : 0);
-	   int max_b = (int) (new_center[2] + h);	
-	   ArrayList<Integer> list_b = bins_b.get(min_b, max_b);
+	   int max_b = (int) (new_center[2] + h);
+	   int max = (max_r + max_g * 256 + max_b * 256 * 256) / binSize;
+	   int min = (min_r + min_g * 256 + min_b * 256 * 256) / binSize;
+	   ArrayList<Integer> list = bins.get(min, max);
 	   
-	   for (Integer j : list_r) {
-		   if (list_g.contains(j) && list_b.contains(j))
-			   points.add(new Color(pixels[j*3],pixels[j*3+1],pixels[j*3+2]));
+	   for (Integer j : list) {
+	       points.add(new Color(pixels[j*3],pixels[j*3+1],pixels[j*3+2]));
 	   }
 	   //System.out.println(points.size() + " points found!");
 	   return points;
@@ -131,14 +136,48 @@ public class MeanShiftSegmenter {
 	   return converged;
    }
    
-   private static byte[] clusterize(Color[] centers, int width, int height) {
+   private static byte[] clusterize(Color[] centers, ArrayList<Integer> seeds, NaiveBin<Integer> bins, byte[] pixels, int width, int height, int binSize) {
 	   byte[] map = new byte[width * height * 3];
-	   for (int i = 0; i < width*height; i++) {
-		   map[i*3] = centers[i].r;
-		   map[i*3+1] = centers[i].g;
-		   map[i*3+2] = centers[i].b;
+	   int idx = 0;
+	   int bin = 0;
+	   /*for (int i = 0; i < width*height; i++) {
+		   idx = ((pixels[i*3]&0xff) + (pixels[i*3+1]&0xff)*256 + (pixels[i*3+2]&0xff)*256*256)/binSize;
+		   map[i*3] = centers[idx].r;
+		   map[i*3+1] = centers[idx].g;
+		   map[i*3+2] = centers[idx].b;
+	   }*/
+	   for (int i = 0; i < centers.length; i++) {
+		   idx = seeds.get(i);
+		   bin = ((pixels[idx*3]&0xff) + (pixels[idx*3+1]&0xff)*256 + (pixels[idx*3+2]&0xff)*256*256)/binSize;
+		   for (Object o : bins.get(bin)) {
+			   map[(Integer)o*3] = centers[i].r;
+			   map[(Integer)o*3+1] = centers[i].g;
+			   map[(Integer)o*3+2] = centers[i].b;
+		   }
 	   }
 	   return map;
+   }
+   
+   private static NaiveBin<Integer> binPoints(byte[] points, int width, int height, int max, int binSize) {
+	   int size = max / binSize;
+	   System.out.println("max=" + max + ", binSize=" + binSize + ", size=" + size);
+	   NaiveBin<Integer> bins = new NaiveBin<Integer>(size);
+	   int val = 0;
+	   for (int i = 0; i < width * height; i++) {
+		   val = (points[i*3] + (points[i*3+1] & 0xff) * 256 + (points[i*3+2] & 0xff) * 256 * 256) / binSize;
+		   bins.put(i, val);
+	   }
+	   return bins;
+   }
+   
+   private static ArrayList<Integer> selectSeeds(NaiveBin<Integer> bins, int max, int binSize, int minFreq) {
+	   ArrayList<Integer> seeds = new ArrayList<Integer>();
+	   for (int i = 0; i < max / binSize; i++) {
+		   if (bins.get(i).length >= minFreq) {
+			   seeds.add((Integer)bins.get(i)[0]);
+		   }
+	   }
+	   return seeds;
    }
    
    public static void main(String[] args) {

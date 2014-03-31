@@ -35,6 +35,7 @@ public class NaiveBin<T> {
 		this.numBins = num;
 		this.bins = new bin[this.numBins];
 		initialize();
+		System.out.println("size=" + this.bins.length);
 	}
 	
 	@SuppressWarnings("unchecked")
