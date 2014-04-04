@@ -2,6 +2,7 @@ package imageUtil;
 
 import java.awt.Dimension;
 import java.util.ArrayList;
+import java.util.Hashtable;
 
 import detection.BDetection;
 import magick.ImageInfo;
@@ -17,9 +18,10 @@ public class MeanShiftSegmenter {
 	   int max = 256 * 256 * 256;
 	   int binSize = (int)h;
 	   NaiveBin<Integer> bins = binPoints(pixels, width, height, max, binSize);
-	   ArrayList<Integer> seeds = selectSeeds(bins, max, binSize, 1);
+	   Hashtable<Integer, Integer> hashtable = new Hashtable<Integer, Integer>();
+	   ArrayList<Integer> seeds = selectSeeds(bins, hashtable, max, binSize, 1);
 	   Color[] centers = meanShift(pixels, seeds, h, bins, binSize);
-	   byte[] map = clusterize(centers, seeds, bins, pixels, width, height, binSize);
+	   byte[] map = clusterize2(centers, hashtable, bins, pixels, width, height, binSize);
 	   return map;
    }
    
@@ -35,9 +37,10 @@ public class MeanShiftSegmenter {
 	   for (int i = 0; i < size; i++) {
 		   System.out.println("processing " + i + "/" + size + "th pixel..");
 		   idx = seeds.get(i);
-		   new_center[0] = pixels[idx*3]&0xff;
-		   new_center[1] = pixels[idx*3+1]&0xff;
-		   new_center[2] = pixels[idx*3+2]&0xff;
+		   //System.out.println("seed=" + idx);
+		   new_center[0] = idx % 256;
+		   new_center[2] = (idx - new_center[0]) / (256*256);
+		   new_center[1] = ((idx - new_center[0]) % (256 * 256)) / 256;
 		   converged = false;
 		   iterations = 0;
 		   while(!converged) {
@@ -65,17 +68,22 @@ public class MeanShiftSegmenter {
    private static ArrayList<Color> getPoints(byte[] pixels, double[] new_center, double h,
 		   NaiveBin<Integer> bins, int binSize) {
 	   //System.out.println("Searching for points..");
+	   //System.out.println("[0]=" + new_center[0] + ", [1]=" + new_center[1] + ", [2]=" + new_center[2]);
 	   ArrayList<Color> points = new ArrayList<Color>();
 	   int min_r = (int) (new_center[0] - h >= 0 ? new_center[0] - h : 0);
-	   int max_r = (int) (new_center[0] + h);	
+	   int max_r = (int) (new_center[0] + h <= 255 ? new_center[0] + h : 255);	
 	   int min_g = (int) (new_center[1] - h >= 0 ? new_center[1] - h : 0);
-	   int max_g = (int) (new_center[1] + h);	
+	   int max_g = (int) (new_center[1] + h <= 255 ? new_center[1] + h : 255);	
 	   int min_b = (int) (new_center[2] - h >= 0 ? new_center[2] - h : 0);
-	   int max_b = (int) (new_center[2] + h);
+	   int max_b = (int) (new_center[2] + h <= 255 ? new_center[2] + h : 255);
+	   //System.out.println("min(r,g,b)=" + min_r + ", " + min_g + ", " + min_b);
+	   //System.out.println("max(r,g,b)=" + max_r + ", " + max_g + ", " + max_b);
 	   int max = (max_r + max_g * 256 + max_b * 256 * 256) / binSize;
 	   int min = (min_r + min_g * 256 + min_b * 256 * 256) / binSize;
-	   ArrayList<Integer> list = bins.get(min, max);
-	   
+	   //ArrayList<Integer> list = bins.get(min, max);
+	   //min = (int)(new_center[0] / binSize + new_center[1] * 256 / binSize + new_center[2] * 256 * 256 / binSize);
+	   //System.out.println("min=" + min + ", max=" + max);
+	   ArrayList<Integer> list = bins.get(min,max);
 	   for (Integer j : list) {
 	       points.add(new Color(pixels[j*3],pixels[j*3+1],pixels[j*3+2]));
 	   }
@@ -149,6 +157,21 @@ public class MeanShiftSegmenter {
 	   return map;
    }
    
+   private static byte[] clusterize2(Color[] centers, Hashtable<Integer, Integer> hashtable, NaiveBin<Integer> bins, byte[] pixels, int width, int height, int binSize) {
+	   byte[] map = new byte[width * height * 3];
+	   int idx = 0;
+	   int bin = 0;
+	   for (int i = 0; i < width * height; i++) {
+		   //to-do: map pixel -> centers -> map
+		   bin = ((pixels[i*3]&0xff) + (pixels[i*3+1]&0xff)*256 + (pixels[i*3+2]&0xff)*256*256)/binSize;
+		   idx = hashtable.get(bin);
+		   map[i*3] = centers[idx].r;
+		   map[i*3+1] = centers[idx].g;
+		   map[i*3+2] = centers[idx].b;
+	   }
+	   return map;
+   }
+   
    private static NaiveBin<Integer> binPoints(byte[] points, int width, int height, int max, int binSize) {
 	   int size = 1 + max / binSize;
 	   System.out.println("max=" + max + ", binSize=" + binSize + ", size=" + size);
@@ -161,11 +184,14 @@ public class MeanShiftSegmenter {
 	   return bins;
    }
    
-   private static ArrayList<Integer> selectSeeds(NaiveBin<Integer> bins, int max, int binSize, int minFreq) {
+   private static ArrayList<Integer> selectSeeds(NaiveBin<Integer> bins, Hashtable<Integer, Integer> hashtable, int max, int binSize, int minFreq) {
 	   ArrayList<Integer> seeds = new ArrayList<Integer>();
+	   int count = 0;
 	   for (int i = 0; i < bins.getNumBins(); i++) {
 		   if (bins.get(i).length >= minFreq) {
-			   seeds.add((Integer)bins.get(i)[0]);
+			   seeds.add(i * binSize);
+			   hashtable.put(i, count);
+			   count++;
 		   }
 	   }
 	   return seeds;
