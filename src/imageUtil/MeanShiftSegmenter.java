@@ -80,10 +80,10 @@ public class MeanShiftSegmenter {
 	   //System.out.println("max(r,g,b)=" + max_r + ", " + max_g + ", " + max_b);
 	   int max = (max_r + max_g * 256 + max_b * 256 * 256) / binSize;
 	   int min = (min_r + min_g * 256 + min_b * 256 * 256) / binSize;
-	   //ArrayList<Integer> list = bins.get(min, max);
-	   //min = (int)(new_center[0] / binSize + new_center[1] * 256 / binSize + new_center[2] * 256 * 256 / binSize);
+	   ArrayList<Integer> list = bins.get(min, max);
+	   //min = (int)((new_center[0] + new_center[1] * 256 + new_center[2] * 256 * 256) / binSize);
 	   //System.out.println("min=" + min + ", max=" + max);
-	   ArrayList<Integer> list = bins.get(min,max);
+	   //ArrayList<Integer> list = bins.get(min,min+1);
 	   for (Integer j : list) {
 	       points.add(new Color(pixels[j*3],pixels[j*3+1],pixels[j*3+2]));
 	   }

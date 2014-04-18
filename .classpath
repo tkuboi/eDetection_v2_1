@@ -8,5 +8,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="/Users/toshihirokuboi/Workspace/eDetection_v2_1/lib/jmagick-6.4.0.jar"/>
 	<classpathentry kind="lib" path="/Users/toshihirokuboi/Workspace/eDetection_v2_1/lib/weka.jar"/>
+	<classpathentry kind="lib" path="/Users/toshihirokuboi/Workspace/eDetection_v2_1/lib/libsvm.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
