@@ -359,6 +359,6 @@ public class WekaLearn {
 		WekaLearn weka = new WekaLearn();
 		weka.buildClassifier("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet.csv");
 		//weka.evaluate("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet2.csv");
-		weka.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet2.csv");
+		weka.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
 	}
 }

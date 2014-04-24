@@ -2595,7 +2595,8 @@ public class BDetection {
    }
    
    public static void evaluate(String filename, ArrayList<BDetection> bds, boolean textOutput) {
-	   int correct = 0;
+	   int tp = 0;
+	   int tn = 0;
 	   int fp = 0;
 	   int fn = 0;
 	   ArrayList<String> falseNegatives = new ArrayList<String>();
@@ -2618,7 +2619,7 @@ public class BDetection {
 							   && r.maxY <= bubbles.get(j).y2
 							   && bubbles.get(j).hit == 0) {
 						   bubbles.get(j).hit = 1;
-						   correct++;
+						   tp++;
 						  
 						   cont = false;
 						   if (textOutput)
@@ -2633,7 +2634,11 @@ public class BDetection {
 					   fp++;
 				   }
 			   }
+			   else {
+				   tn++;
+			   }
 		   }
+		   
 		   for (Bubble b : bubbles) {
 			   if (b.hit == 0) {
 				   falseNegatives.add(frames[i].filename + ": " + b.x1 + ", " + b.y1 + " - " + b.x2 + ", " + b.y2);
@@ -2641,13 +2646,20 @@ public class BDetection {
 			   }
 		   }
 	   }
-	   System.out.println("Correct=" + correct + ", FP=" + fp + ", FN=" + fn);
+	   System.out.println("TP=" + tp + ", FP=" + fp + ", FN=" + fn + ", Precision=" + ((double)tp/(double)(tp+fp)));
 	   if (falseNegatives.size() > 0) {
 		   System.out.println("False Negatives:");
 		   for (String str : falseNegatives) {
+			   String[] tokens = str.split(": ");
+			   String[] xys = tokens[1].split(", ");
 			   System.out.println(str);
+			   extractFeatureFromRect(bds, tokens[0], Integer.parseInt(xys[0]), Integer.parseInt(xys[1]), Integer.parseInt(xys[2]), Integer.parseInt(xys[3]));
 		   }
 	   }
+   }
+   
+   public static void extractFeatureFromRect(ArrayList<BDetection> bds, String filename, int x1, int y1, int x2, int y2) {
+	   
    }
    
    public static void exportFeatureSet(ArrayList<BDetection> bds, String filename) {
@@ -2678,8 +2690,8 @@ public class BDetection {
    }
    
    public static void main(String[] args) {
-      String path = "./TrainingSet/images/";
-	  //String path = "./image_0670/";
+      //String path = "./TrainingSet/images/";
+	  String path = "./image_0670/";
       File dir = new File(path);
       File[] files = dir.listFiles(new FilenameFilter() {
     	    public boolean accept(File directory, String fileName) {
@@ -2708,8 +2720,9 @@ public class BDetection {
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
       }
-      BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      BDetection.exportFeatureSet(bds, "featureSet.csv");
+      //BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
+      BDetection.evaluate(path+"bubbles.txt",bds, true);
+      BDetection.exportFeatureSet(bds, "featureSet3.csv");
    }
 }
 
