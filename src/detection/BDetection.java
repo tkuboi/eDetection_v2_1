@@ -2594,7 +2594,7 @@ public class BDetection {
 	   return arrframes;
    }
    
-   public static void evaluate(String filename, ArrayList<BDetection> bds, boolean textOutput) {
+   public static ArrayList<String> evaluate(String filename, ArrayList<BDetection> bds, boolean textOutput) {
 	   int tp = 0;
 	   int tn = 0;
 	   int fp = 0;
@@ -2605,37 +2605,41 @@ public class BDetection {
 		   
 		   ArrayList<Bubble> bubbles = frames[i].bubbles;
 		   for (RegionInfo r : bds.get(i).pixCounts) {
-			   if (r.isBubble) {
-				   int j = 0;
-				   boolean cont = true;
-				   while (j < bubbles.size() && cont) {
-                                   System.out.println("minX=" + r.minX + ", x1=" + bubbles.get(j).x1);
-                                   System.out.println("minY=" + r.minY + ", y1=" + bubbles.get(j).y1);
-                                   System.out.println("maxX=" + r.maxX + ", x2=" + bubbles.get(j).x2);
-                                   System.out.println("maxY=" + r.maxY + ", y2=" + bubbles.get(j).y2);
-					   if (r.minX >= bubbles.get(j).x1
-							   && r.minY >= bubbles.get(j).y1
-							   && r.maxX <= bubbles.get(j).x2
-							   && r.maxY <= bubbles.get(j).y2
-							   && bubbles.get(j).hit == 0) {
-						   bubbles.get(j).hit = 1;
+			   int j = 0;
+			   boolean cont = true;
+			   while (j < bubbles.size() && cont) {
+				   System.out.println("minX=" + r.minX + ", x1=" + bubbles.get(j).x1);
+				   System.out.println("minY=" + r.minY + ", y1=" + bubbles.get(j).y1);
+				   System.out.println("maxX=" + r.maxX + ", x2=" + bubbles.get(j).x2);
+				   System.out.println("maxY=" + r.maxY + ", y2=" + bubbles.get(j).y2);
+				   if (r.minX >= bubbles.get(j).x1
+						   && r.minY >= bubbles.get(j).y1
+						   && r.maxX <= bubbles.get(j).x2
+						   && r.maxY <= bubbles.get(j).y2
+						   && bubbles.get(j).hit == 0) { // match found in bubbles.txt
+					   bubbles.get(j).hit = 1;
+					   if (r.isBubble == true) // if the prediction was true
 						   tp++;
-						  
-						   cont = false;
-						   if (textOutput)
-						      bds.get(i).extractText(r);
+					   else {  // if the prediction was false
+						   r.isBubble = true;
+						   falseNegatives.add(frames[i].filename + ": " + 
+								   bubbles.get(j).x1 + ", " + bubbles.get(j).y1 + " - " + bubbles.get(j).x2 + ", " + bubbles.get(j).y2);
+						   fn++;
 					   }
-					   else {
-						   r.isBubble = false;
-					   }
-					   j++;
+					   cont = false;  // break out of the while loop
+					   if (textOutput)
+						   bds.get(i).extractText(r);
 				   }
-				   if (cont) {
-					   fp++;
-				   }
+				   j++;
 			   }
-			   else {
-				   tn++;
+			   if (cont) { //no match found in bubbles.txt
+				   if (r.isBubble == true) {
+					   fp++;
+					   r.isBubble = false;
+				   }
+				   else {
+					   tn++;
+				   }
 			   }
 		   }
 		   
@@ -2646,20 +2650,12 @@ public class BDetection {
 			   }
 		   }
 	   }
-	   System.out.println("TP=" + tp + ", FP=" + fp + ", FN=" + fn + ", Precision=" + ((double)tp/(double)(tp+fp)));
-	   if (falseNegatives.size() > 0) {
-		   System.out.println("False Negatives:");
-		   for (String str : falseNegatives) {
-			   String[] tokens = str.split(": ");
-			   String[] xys = tokens[1].split(", ");
-			   System.out.println(str);
-			   extractFeatureFromRect(bds, tokens[0], Integer.parseInt(xys[0]), Integer.parseInt(xys[1]), Integer.parseInt(xys[2]), Integer.parseInt(xys[3]));
-		   }
-	   }
+	   System.out.println("TP=" + tp + ", FP=" + fp + ", TN=" + tn + ", FN=" + fn + ", Precision=" + ((double)tp/(double)(tp+fp)));
+	   return falseNegatives;
    }
    
-   public static void extractFeatureFromRect(ArrayList<BDetection> bds, String filename, int x1, int y1, int x2, int y2) {
-	   
+   public static BDetection extractFeatureFromRect(String filename, int x1, int y1, int x2, int y2) {
+	   return null;
    }
    
    public static void exportFeatureSet(ArrayList<BDetection> bds, String filename) {
@@ -2721,7 +2717,17 @@ public class BDetection {
          bds.add(bd);
       }
       //BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      BDetection.evaluate(path+"bubbles.txt",bds, true);
+      ArrayList<String> fns = BDetection.evaluate(path+"bubbles.txt",bds, true);
+	   if (fns.size() > 0) {
+		   System.out.println("False Negatives:");
+		   for (String str : fns) {
+			   System.out.println(str);
+			   //String[] tokens = str.split(": ");
+			   //String[] xys = tokens[1].split(", ");
+			   //bds.add(extractFeatureFromRect(tokens[0], Integer.parseInt(xys[0]), Integer.parseInt(xys[1]), Integer.parseInt(xys[2]), Integer.parseInt(xys[3])));
+		   }
+	   }
+
       BDetection.exportFeatureSet(bds, "featureSet3.csv");
    }
 }
