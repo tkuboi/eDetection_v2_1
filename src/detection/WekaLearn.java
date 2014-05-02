@@ -3,6 +3,8 @@ package detection;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Scanner;
 import java.util.Random;
 
@@ -17,6 +19,7 @@ import weka.classifiers.functions.SMO;
 
 public class WekaLearn {
 	private SMO model;
+	
 	//private int numTrainingSet;
 	
 	public WekaLearn() {
@@ -186,7 +189,7 @@ public class WekaLearn {
 		return fvWekaAttributes;
 	}
 
-	private static Instances createInstances(FastVector fvWekaAttributes, int size, ArrayList<String> strArray) {
+	private static Instances createInstances(FastVector fvWekaAttributes, int size, List<String> strArray) {
 		Instances trainningSet = new Instances("Rel", fvWekaAttributes, size);
 		String[] tokens;
 		for (String str : strArray) {
@@ -267,8 +270,8 @@ public class WekaLearn {
         return trainningSet;
 	}
 	
-	private void buildKernel(ArrayList<String> data) {
-		data.remove(0);
+	private void buildKernel(List<String> data) {
+		//data.remove(0);
 		FastVector vector = createVector();
 		Instances trainningSet = createInstances(vector, data.size(), data);
 
@@ -333,7 +336,41 @@ public class WekaLearn {
 		return null;
 	}
 	
-	private ArrayList<String> readCSV(String filename) {
+	public String classify(List<String> testData) {
+		String actual;
+		String predicted;
+		String imgfile;
+		String[] tokens;
+		int match = 0;
+		int mismatch = 0;
+		//ArrayList<String> testData = readCSV(filename);
+		testData.remove(0);
+		FastVector vector = createVector();
+		Instances instances = createInstances(vector, testData.size(), testData);
+		for (int i = 0; i < testData.size(); i++) {
+			tokens = testData.get(i).split(",");
+			imgfile = tokens[0].replace('"', ' ').trim();
+			System.out.println(imgfile+":"+tokens[1]+":"+tokens[2]+":"+tokens[3]+","+tokens[4]+","+tokens[5]+","+tokens[6]);
+			try {
+				double pred = this.model.classifyInstance(instances.instance(i));
+				actual = instances.classAttribute().value((int) instances.instance(i).classValue());
+				predicted = instances.classAttribute().value((int) pred);
+				System.out.print("actual: " + actual);
+				System.out.println(", predicted: " + predicted);
+				if (actual.equals(predicted))
+					match++;
+				else
+					mismatch++;
+			}
+			catch (Exception ex) {
+				System.err.println(ex.getMessage());
+			}
+		}
+		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)));
+		return null;
+	}
+	
+	public static ArrayList<String> readCSV(String filename) {
 		ArrayList<String> lines = new ArrayList<String>();
 		try {
 			File file = new File(filename);
@@ -355,10 +392,23 @@ public class WekaLearn {
 		buildKernel(trainningData);
 	}
 	
+	public void buildClassifier(List<String> trainingData) {
+		buildKernel(trainingData);
+	}
+	
 	public static void main(String[] args) {
+		ArrayList<String> data = WekaLearn.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
+		data.remove(0);
+		ArrayList<String> data2 = WekaLearn.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
+		data2.remove(0);
+		data.addAll(data2);
+		long seed = System.nanoTime();
+		Collections.shuffle(data, new Random(seed));
 		WekaLearn weka = new WekaLearn();
-		weka.buildClassifier("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet.csv");
+		weka.buildClassifier(data.subList(0, data.size() - 101));
+		weka.classify(data.subList(data.size() - 101, data.size() - 1));
+		//weka.buildClassifier("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
 		//weka.evaluate("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet2.csv");
-		weka.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
+		//weka.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
 	}
 }

@@ -2686,8 +2686,8 @@ public class BDetection {
    }
    
    public static void main(String[] args) {
-      //String path = "./TrainingSet/images/";
-	  String path = "./image_0670/";
+      String path = "./TrainingSet/images/";
+	  //String path = "./image_0670/";
       File dir = new File(path);
       File[] files = dir.listFiles(new FilenameFilter() {
     	    public boolean accept(File directory, String fileName) {
@@ -2716,8 +2716,8 @@ public class BDetection {
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
       }
-      //BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
-      ArrayList<String> fns = BDetection.evaluate(path+"bubbles.txt",bds, true);
+      ArrayList<String> fns = BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
+      //ArrayList<String> fns = BDetection.evaluate(path+"bubbles.txt",bds, true);
 	   if (fns.size() > 0) {
 		   System.out.println("False Negatives:");
 		   for (String str : fns) {
@@ -2728,7 +2728,7 @@ public class BDetection {
 		   }
 	   }
 
-      BDetection.exportFeatureSet(bds, "featureSet3.csv");
+      BDetection.exportFeatureSet(bds, "featureSet1.csv");
    }
 }
 
