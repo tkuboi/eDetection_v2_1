@@ -279,7 +279,7 @@ public class WekaLearn {
 		try {
 			model.buildClassifier(trainningSet);
 			Evaluation eval = new Evaluation(trainningSet);
-			eval.crossValidateModel(model, trainningSet, 10, new Random(1));
+			eval.crossValidateModel(model, trainningSet, 3, new Random(1));
 			System.out.println(eval.toSummaryString("\nResults\n======\n", false));
 		}
 		catch (Exception ex) {
@@ -366,7 +366,7 @@ public class WekaLearn {
 				System.err.println(ex.getMessage());
 			}
 		}
-		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)));
+		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)) + ", total instances=" + (match + mismatch));
 		return null;
 	}
 	
@@ -402,11 +402,13 @@ public class WekaLearn {
 		ArrayList<String> data2 = WekaLearn.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
 		data2.remove(0);
 		data.addAll(data2);
+		int ratio = 3;
+		int trainsize = 2 * data.size() / ratio;
 		long seed = System.nanoTime();
 		Collections.shuffle(data, new Random(seed));
 		WekaLearn weka = new WekaLearn();
-		weka.buildClassifier(data.subList(0, data.size() - 101));
-		weka.classify(data.subList(data.size() - 101, data.size() - 1));
+		weka.buildClassifier(data.subList(0, trainsize));
+		weka.classify(data.subList(trainsize, data.size() - 1));
 		//weka.buildClassifier("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
 		//weka.evaluate("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet2.csv");
 		//weka.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
