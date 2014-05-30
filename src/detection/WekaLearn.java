@@ -343,6 +343,7 @@ public class WekaLearn {
 		String[] tokens;
 		int match = 0;
 		int mismatch = 0;
+		int tp = 0, fp = 0, tn = 0, fn = 0;
 		//ArrayList<String> testData = readCSV(filename);
 		testData.remove(0);
 		FastVector vector = createVector();
@@ -357,16 +358,27 @@ public class WekaLearn {
 				predicted = instances.classAttribute().value((int) pred);
 				System.out.print("actual: " + actual);
 				System.out.println(", predicted: " + predicted);
-				if (actual.equals(predicted))
+				if (actual.equals(predicted)) {
 					match++;
-				else
+					if (predicted.equals("true"))
+						tp++;
+					else
+						tn++;
+				}
+				else {
 					mismatch++;
+					if (predicted.equals("true"))
+						fp++;
+					else
+						fn++;
+				}
 			}
 			catch (Exception ex) {
 				System.err.println(ex.getMessage());
 			}
 		}
 		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)) + ", total instances=" + (match + mismatch));
+		System.out.println("TP=" + tp + ", FP=" + fp + ", TN=" + tn + ", FN=" + fn + ", Precision=" + ((double)tp/(double)(tp + fp)) + ", Recall=" + ((double)tp/(double)(tp + fn)));
 		return null;
 	}
 	
