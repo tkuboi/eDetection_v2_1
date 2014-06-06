@@ -17,6 +17,8 @@ import weka.core.Instances;
 //import weka.classifiers.functions.LibSVM;
 import weka.classifiers.functions.SMO;
 
+import myUtil.FileUtil;
+
 public class WekaLearn {
 	private SMO model;
 	
@@ -288,7 +290,7 @@ public class WekaLearn {
 	}
 	
 	public void evaluate(String filename) {
-		ArrayList<String> testData = readCSV(filename);
+		List<String> testData = FileUtil.readCSV(filename);
 		testData.remove(0);
 		FastVector vector = createVector();
 		Instances instances = createInstances(vector, testData.size(), testData);
@@ -302,16 +304,17 @@ public class WekaLearn {
 		}
 	}
 	
-	public String classify(String filename) {
-		String actual;
+	public List<String> classify(String filename) {
+		/*String actual;
 		String predicted;
 		String imgfile;
 		String[] tokens;
 		int match = 0;
-		int mismatch = 0;
-		ArrayList<String> testData = readCSV(filename);
+		int mismatch = 0;*/
+		List<String> testData = FileUtil.readCSV(filename);
 		testData.remove(0);
-		FastVector vector = createVector();
+		return classify(testData);
+		/*FastVector vector = createVector();
 		Instances instances = createInstances(vector, testData.size(), testData);
 		for (int i = 0; i < testData.size(); i++) {
 			tokens = testData.get(i).split(",");
@@ -333,10 +336,10 @@ public class WekaLearn {
 			}
 		}
 		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)));
-		return null;
+		return null;*/
 	}
 	
-	public String classify(List<String> testData) {
+	public List<String> classify(List<String> testData) {
 		String actual;
 		String predicted;
 		String imgfile;
@@ -345,7 +348,7 @@ public class WekaLearn {
 		int mismatch = 0;
 		int tp = 0, fp = 0, tn = 0, fn = 0;
 		//ArrayList<String> testData = readCSV(filename);
-		testData.remove(0);
+		//testData.remove(0);
 		FastVector vector = createVector();
 		Instances instances = createInstances(vector, testData.size(), testData);
 		for (int i = 0; i < testData.size(); i++) {
@@ -356,6 +359,8 @@ public class WekaLearn {
 				double pred = this.model.classifyInstance(instances.instance(i));
 				actual = instances.classAttribute().value((int) instances.instance(i).classValue());
 				predicted = instances.classAttribute().value((int) pred);
+				//instances.instance(i).setClassValue(predicted);
+				updateLabel(testData, i, predicted);
 				System.out.print("actual: " + actual);
 				System.out.println(", predicted: " + predicted);
 				if (actual.equals(predicted)) {
@@ -379,28 +384,37 @@ public class WekaLearn {
 		}
 		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)) + ", total instances=" + (match + mismatch));
 		System.out.println("TP=" + tp + ", FP=" + fp + ", TN=" + tn + ", FN=" + fn + ", Precision=" + ((double)tp/(double)(tp + fp)) + ", Recall=" + ((double)tp/(double)(tp + fn)));
-		return null;
+		return testData;
 	}
 	
-	public static ArrayList<String> readCSV(String filename) {
-		ArrayList<String> lines = new ArrayList<String>();
-		try {
-			File file = new File(filename);
-			Scanner sc = new Scanner(file);
-			String line = null;
-			while (sc.hasNextLine()) {
-				line = sc.nextLine();
-				if (line.length() > 0) lines.add(line);
+	private static void updateLabel(List<String> data, int i, String label) {
+		StringBuilder sb = new StringBuilder();
+		String tokens[] = data.get(i).split(",");
+		tokens[2] = label;
+		for (String token : tokens) {
+			sb.append(token.trim());
+			sb.append(",");
+		}
+		data.set(i, sb.substring(0, sb.length() - 1));
+	}
+	
+	public static List<String> convert2csv(Instances instances) {
+		List<String> csv = new ArrayList<String>();
+		StringBuffer sb = new StringBuffer();
+		for (int i = 0; i < instances.numInstances(); i++) {
+			for (int j = 0; j < instances.instance(i).numAttributes(); j++) {
+			    sb.append(instances.instance(i).toString(j));
+			    sb.append(",");
 			}
+			sb.deleteCharAt(sb.length()-1);
+			csv.add(sb.toString());
+			sb.delete(0, sb.length());
 		}
-		catch (IOException ex) {
-			System.err.println(ex.getMessage());
-		}
-		return lines;
+		return csv;
 	}
-	
+		
 	public void buildClassifier(String filename) {
-		ArrayList<String> trainningData = readCSV(filename);
+		List<String> trainningData = FileUtil.readCSV(filename);
 		buildKernel(trainningData);
 	}
 	
@@ -408,19 +422,42 @@ public class WekaLearn {
 		buildKernel(trainingData);
 	}
 	
-	public static void main(String[] args) {
-		ArrayList<String> data = WekaLearn.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
-		data.remove(0);
-		ArrayList<String> data2 = WekaLearn.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
-		data2.remove(0);
-		data.addAll(data2);
-		int ratio = 3;
-		int trainsize = 2 * data.size() / ratio;
+	public static List<String> run(List<String> data, int ratioTrain, int ratioTest, int weight) {
+		List<String> newdata = null;
+		int ratio = ratioTrain + ratioTest;
+		int trainsize = ratioTrain * data.size() / ratio;
 		long seed = System.nanoTime();
 		Collections.shuffle(data, new Random(seed));
 		WekaLearn weka = new WekaLearn();
 		weka.buildClassifier(data.subList(0, trainsize));
-		weka.classify(data.subList(trainsize, data.size() - 1));
+		if (ratioTrain < ratio) {
+			newdata = weka.classify(data.subList(trainsize, data.size() - 1));
+			/*newdata = convert2csv(instances);
+			for (int i = 0; i < weight; i++)
+			    newdata.addAll(data.subList(0, trainsize)); //weighting*/
+		}
+		return newdata;
+	}
+	
+	public static void main(String[] args) {
+		List<String> data = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
+		data.remove(0);
+		//List<String> data2 = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
+		//data2.remove(0);
+		//data.addAll(data2);
+		List<String> newdata = WekaLearn.run(data, 2, 1, 2);
+		FileUtil.writeCSV(newdata, "SemiSVTrainingSet.csv");
+		System.out.println("Testing Semi Supervised Learning");
+		WekaLearn model = new WekaLearn();
+		model.buildClassifier(newdata);
+		model.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
+		//int ratio = 3;
+		//int trainsize = 2 * data.size() / ratio;
+		//long seed = System.nanoTime();
+		//Collections.shuffle(data, new Random(seed));
+		//WekaLearn weka = new WekaLearn();
+		//weka.buildClassifier(data.subList(0, trainsize));
+		//weka.classify(data.subList(trainsize, data.size() - 1));
 		//weka.buildClassifier("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
 		//weka.evaluate("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet2.csv");
 		//weka.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");

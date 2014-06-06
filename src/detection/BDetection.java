@@ -1122,37 +1122,6 @@ public class BDetection {
 	   return histR;
    }
    
-   /*private double getDistCenters(RegionInfo r) {
-      double cX1 = (r.minX + r.maxX) / 2;
-      double cY1 = (r.minY + r.maxY) / 2;
-      double cX2, cY2;
-      boolean inRegion = false;
-      int idx = 0;
-      int val = 0;
-      int bpMarker = 0;
-      for(int row = r.minY; row <= r.maxY; row++) {
-         inRegion = false;
-         for(int col = r.minX; col <= r.maxX; col++) {
-            idx = this.width * row + col;
-            val = this.pixels[idx*3] & 0xff;
-            if (val == r.marker)
-               inRegion = true;
-            if (inRegion && val == 0 && !checkAhead(col, row))
-               inRegion = false;
-            if (inRegion && val == 0) {
-               bpMarker = this.blackPixels[idx];
-               if (bpMarker >= 2 && this.blackRegions.get(bpMarker).type == 1) {
-                  cX2 = 0;
-                  cY2 = 0;
-                  break;
-               }
-            }
-         }
-      }
-      double dist = 0;
-      return dist; 
-   }*/
-
    public byte[] getSubBlob(int orgX, int orgY, int x, int y) {
       System.out.println(" minX=" + orgX + " minY=" + orgY + " maxX=" + x + " maxY=" + y + " size=" + ((x - orgX + 1) * (y - orgY + 1) * 3));
       int width = x - orgX + 1;
@@ -1199,27 +1168,6 @@ public class BDetection {
 		    	  //	  rangeRow = getStartEndIdxRow(blob, width, height, col);
 	    		  if (col == 0)
 	    			  rangeCol = getStartEndIdxCol(blob, width, row);
-	    		  //System.out.println("min row=" + rangeRow[0] + "-max row=" + rangeRow[1] + "/" + height);
-	    		  //System.out.println("val of col=" + col + " is " + (0xFF & blob[idx * 3]));
-	    		  /*if ((blob[idx*3] & 0xff) <= 0
-	    				  && (col < rangeCol[0] || col > rangeCol[1] || row == height - 1)) {
-	    			  //System.out.println("val of idx=" + idx + " is " + (blob[idx*3] & 0xff));
-	    			  //blob[idx*3] = (byte)1;
-	    			  //blob[idx*3 + 1] = (byte)1;
-	    			  //blob[idx*3 + 2] = (byte)1;
-	    			  RegionInfo rInfo = seedGrowth(idx, 1, width, blob,
-	    			            new Callable1<Boolean>() {
-	    			               public Boolean call(int idx, int minX, int maxX, int minY, int maxY, byte[] blob) {
-	    			                  return BDetection.isBlackSpace(idx, 0, width, height, blob);
-	    			               }
-	    			            },
-	    			            new Callable2<Integer>() {
-	    			               public Integer call(int idx, int val, ArrayList<Integer> queue, byte[] blob) {
-	    			                  return BDetection.addQueue(idx, val, queue, blob);
-	    			               }
-	    			            }
-	    			         );
-	    		  }*/
 	    	  }
 	      }
 	      writeRegionImage(region, blob, 0, width, height);
@@ -2306,84 +2254,6 @@ public class BDetection {
 	                             seed.closed, ((double)closed / (double)edgePixels), seed.rg);
 	   }
 
-   /*public static RegionInfo seedGrowth(int seed, int marker, int width, byte[] blob) {
-      int pix, x, y, idx, count, maxX, minX, maxY, minY;
-      pix = seed;
-      x = y = idx = count = 0;
-      ArrayList<Integer> queue = new ArrayList<Integer>();
-      x = pix % width;
-      y = pix / width;
-      maxX = minX = x;
-      maxY = minY = y;
-      if (y - 1 >= 0 && x - 1 >= 0 && x - 1 < width) {
-         idx = width * y + x;
-         if (checkFunc.call(idx, blob)) { // check the pixel itself
-            //count += addFunc.call(idx, val, queue, blob);
-            count += addQueue(idx, queue, marker);
-         }
-      }
-
-      while(!queue.isEmpty()) {
-         pix = queue.remove(0);
-         x = pix % width;
-         y = pix / width;
-         maxX = (x > maxX ? x : maxX);
-         minX = (x < minX ? x : minX);
-         maxY = (y > maxY ? y : maxY);
-         minY = (y < minY ? y : minY);
-         // check all 8 neighbors
-         // if the neighbor is 1, mark the pixel with the marker and add the pixel to the queue
-         if (y - 1 >= 0 && x - 1 >= 0 && x - 1 < width) {
-            idx = width * (y - 1) + x - 1;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 1
-               count += addQueue(idx, queue, marker);
-            }
-         }
-         if (y >= 0 && x - 1 >= 0 && x - 1 < width) {
-            idx = width * (y) + x - 1;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 2
-               count += addQueue(idx, queue, marker);
-            }
-         }
-         if (y + 1 >= 0 && x - 1 >= 0 && x - 1 < width) {
-            idx = width * (y + 1) + x - 1;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 3
-               count += addQueue(idx, queue, marker);
-            }
-         }
-         if (y - 1 >= 0 && x >= 0 && x < width) {
-            idx = width * (y - 1) + x;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 4
-               count += addQueue(idx, queue, marker);
-            }
-         }
-         if (y + 1 >= 0 && x >= 0 && x < width) {
-            idx = width * (y + 1) + x;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 5
-               count += addQueue(idx, queue, marker);
-            }
-         }
-         if (y - 1 >= 0 && x + 1 >= 0 && x + 1 < width) {
-            idx = width * (y - 1) + x + 1;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 6
-               count += addQueue(idx, queue, marker);
-            }
-         }
-         if (y >= 0 && x + 1 >= 0 && x + 1 < width) {
-            idx = width * y + x + 1;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 7
-               count += addQueue(idx, queue, marker);
-            }
-         }
-         if (y + 1 >= 0 && x + 1 >= 0 && x + 1 < width) {
-            idx = width * (y + 1) + x + 1;
-            if (isWhiteSpace(idx, BDetection.RADIUS)) { // check right 8
-               count += addQueue(idx, queue, marker);
-            }
-         }
-      }
-      return new RegionInfo(marker, count, minX, maxX, minY, maxY);
-   }*/
 
    private double calcAverageBW(RegionInfo region) {
       double bp = 0.0;
@@ -2722,9 +2592,6 @@ public class BDetection {
 		   System.out.println("False Negatives:");
 		   for (String str : fns) {
 			   System.out.println(str);
-			   //String[] tokens = str.split(": ");
-			   //String[] xys = tokens[1].split(", ");
-			   //bds.add(extractFeatureFromRect(tokens[0], Integer.parseInt(xys[0]), Integer.parseInt(xys[1]), Integer.parseInt(xys[2]), Integer.parseInt(xys[3])));
 		   }
 	   }
 
