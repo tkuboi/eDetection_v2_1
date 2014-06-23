@@ -2555,6 +2555,45 @@ public class BDetection {
 	   return str;
    }
    
+   public void processWhitePixels() {
+	   int marker = this.textgroup.size(); //mark pixel with number greater than 1
+	   final int width = this.width;
+	   final int height = this.height;
+	   int i = 0;
+	   ArrayList<Integer> seeds = new ArrayList<Integer>();
+	   RegionInfo rInfo = null;
+	   for (int row = 0; row < height; row++) {
+		   for (int col = 0; col < width; col++) {
+			   i = row * width + col;
+			   if (this.pixels[i] == (byte)1) { // white pixel
+				   seeds.add(i);
+			   }
+		   }
+	   }
+	   for (Integer seed : seeds) {
+		   int col = seed % width;
+		   int row = seed / width;
+		   //System.out.println("col=" + col + ", row=" + row + ", marker=" + marker);
+		   rInfo = seedGrowth(seed, marker, width, this.blackPixels,
+				   new Callable1<Boolean>() {
+			   public Boolean call(int idx, int minX, int maxX, int minY, int maxY, byte[] blob) {
+				   return BDetection.isWhiteSpace(idx, 3, width, height, blob);
+			   }
+		   },
+		   new Callable2<Integer>() {
+			   public Integer call(int idx, int val, ArrayList<Integer> queue, byte[] blob) {
+				   return BDetection.addQueueNoRGB(idx, val, queue, blob);
+			   }
+		   }
+				   );
+		   if (rInfo.pixCount > 0) {
+			   //this.whiteRegions.add(rInfo);
+			   marker++;
+		   }
+	   }
+   }
+
+   
    public static void main(String[] args) {
       String path = "./TrainingSet/images/";
 	  //String path = "./image_0670/";
@@ -2585,6 +2624,8 @@ public class BDetection {
          bd.testRegions2();
          bd.writeImage(files[i].getName()); //output
          bds.add(bd);
+         //pick white pixels as seeds
+         //do region growing
       }
       ArrayList<String> fns = BDetection.evaluate("./TrainingSet/bubbles.txt",bds, true);
       //ArrayList<String> fns = BDetection.evaluate(path+"bubbles.txt",bds, true);

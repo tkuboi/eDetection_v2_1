@@ -304,7 +304,7 @@ public class WekaLearn {
 		}
 	}
 	
-	public List<String> classify(String filename) {
+	public List<String> classify(String filename, double[] result) {
 		/*String actual;
 		String predicted;
 		String imgfile;
@@ -313,7 +313,7 @@ public class WekaLearn {
 		int mismatch = 0;*/
 		List<String> testData = FileUtil.readCSV(filename);
 		testData.remove(0);
-		return classify(testData);
+		return classify(testData, result);
 		/*FastVector vector = createVector();
 		Instances instances = createInstances(vector, testData.size(), testData);
 		for (int i = 0; i < testData.size(); i++) {
@@ -339,7 +339,7 @@ public class WekaLearn {
 		return null;*/
 	}
 	
-	public List<String> classify(List<String> testData) {
+	public List<String> classify(List<String> testData, double[] result) {
 		String actual;
 		String predicted;
 		String imgfile;
@@ -382,6 +382,14 @@ public class WekaLearn {
 				System.err.println(ex.getMessage());
 			}
 		}
+		double acc = ((double)match/(double)(match + mismatch));
+		double pre = ((double)tp/(double)(tp + fp));
+		double rec = ((double)tp/(double)(tp + fn));
+		double f = 2*pre*rec/(pre+rec);
+		result[0] += acc;
+		result[1] += pre;
+		result[2] += rec;
+		result[3] += f;
 		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)) + ", total instances=" + (match + mismatch));
 		System.out.println("TP=" + tp + ", FP=" + fp + ", TN=" + tn + ", FN=" + fn + ", Precision=" + ((double)tp/(double)(tp + fp)) + ", Recall=" + ((double)tp/(double)(tp + fn)));
 		return testData;
@@ -422,7 +430,7 @@ public class WekaLearn {
 		buildKernel(trainingData);
 	}
 	
-	public static List<String> run(List<String> data, int ratioTrain, int ratioTest, int weight) {
+	public static List<String> run(List<String> data, int ratioTrain, int ratioTest, int weight, double[] result) {
 		List<String> newdata = null;
 		int ratio = ratioTrain + ratioTest;
 		int trainsize = ratioTrain * data.size() / ratio;
@@ -431,8 +439,7 @@ public class WekaLearn {
 		WekaLearn weka = new WekaLearn();
 		weka.buildClassifier(data.subList(0, trainsize));
 		if (ratioTrain < ratio) {
-			newdata = weka.classify(data.subList(trainsize, data.size() - 1));
-			/*newdata = convert2csv(instances);
+			newdata = weka.classify(data.subList(trainsize, data.size() - 1), result);
 			for (int i = 0; i < weight; i++)
 			    newdata.addAll(data.subList(0, trainsize)); //weighting*/
 		}
@@ -442,15 +449,30 @@ public class WekaLearn {
 	public static void main(String[] args) {
 		List<String> data = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
 		data.remove(0);
-		//List<String> data2 = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
-		//data2.remove(0);
-		//data.addAll(data2);
-		List<String> newdata = WekaLearn.run(data, 2, 1, 2);
-		FileUtil.writeCSV(newdata, "SemiSVTrainingSet.csv");
-		System.out.println("Testing Semi Supervised Learning");
-		WekaLearn model = new WekaLearn();
-		model.buildClassifier(newdata);
-		model.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
+		int trials = 5;
+		double[] result1 = {0,0,0,0};
+		double[] result2 = {0,0,0,0};
+		Boolean semi = true;
+		if (!semi) {
+			List<String> data2 = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
+			data2.remove(0);
+			data.addAll(data2);
+		}
+		
+		for (int i=0; i < trials; i++) {
+			List<String> newdata = WekaLearn.run(data, 1, 1, 1, result1);
+			if (semi) {
+				FileUtil.writeCSV(newdata, "SemiSVTrainingSet.csv");
+				System.out.println("Testing Semi Supervised Learning");
+				WekaLearn model = new WekaLearn();
+				model.buildClassifier(newdata);
+				model.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv", result2);
+			}
+		}
+		if (!semi)
+		    System.out.println("Acc=" + result1[0]/(double)trials + ", Prec=" + result1[1]/(double)trials + ", Recall=" + result1[2]/(double)trials + ", F=" + result1[3]/(double)trials);
+		else
+		    System.out.println("Acc=" + result2[0]/(double)trials + ", Prec=" + result2[1]/(double)trials + ", Recall=" + result2[2]/(double)trials + ", F=" + result2[3]/(double)trials);
 		//int ratio = 3;
 		//int trainsize = 2 * data.size() / ratio;
 		//long seed = System.nanoTime();
