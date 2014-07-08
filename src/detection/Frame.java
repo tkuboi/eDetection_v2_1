@@ -4,10 +4,10 @@ import java.util.*;
    
    public class Frame {
 	   public String filename;
-	   public ArrayList<Bubble> bubbles;
+	   public List<Element> elements;
 	   public Frame(String name) {
 		   filename = name;
-		   bubbles = new ArrayList<Bubble>();
+		   elements = new ArrayList<Element>();
 	   }
    }
 

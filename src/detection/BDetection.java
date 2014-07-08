@@ -105,6 +105,22 @@ public class BDetection {
 	   return this.filename;
    }
    
+   public int getWidth() {
+	   return this.width;
+   }
+   
+   public int getHeight() {
+	   return this.height;
+   }
+   
+   public byte[] getPixels() {
+	   return this.pixels;
+   }
+   
+   public List<RegionGroup> getTextGroup() {
+	   return this.textgroup;
+   }
+   
    public void createBWPix() {
       int threshold = BDetection.BW_THRESHOLD;
       try {
@@ -886,6 +902,28 @@ public class BDetection {
       return result;
    }
 
+   public static boolean isWhiteSpace4(int idx, int radius, int width, int height, byte[] blob) { 
+	   boolean result = false;
+	   double score = 0.0;
+	   if (isLegal(idx, width, height) && blob[3*idx] == (byte)1) {
+		   int x = idx % width;
+		   int y = idx / width;
+		   int idx2 = 0;
+		   for (int i = -radius; i <= radius; i++) {
+			   for (int j = -radius; j <= radius; j++) {
+				   idx2 = width * (y + j) + x + i;
+				   if (isLegal(idx2, width, height) && blob[3*idx2] >= (byte)1) { //1
+					   score++;
+				   }
+			   }
+		   }
+		   if (score >= (1+(radius*2)) * (1+(radius*2))) { //(1+(radius*2)) * (1+(radius*2))
+			   result = true;
+		   }
+	   }
+	   return result;
+   }
+   
    public boolean isChokePoint(int idx, Seed seed) {
       boolean chokepoint = false;
       int x = idx % this.width;
@@ -1087,7 +1125,7 @@ public class BDetection {
       }
    }
 
-   private Histogram buildHistR(RegionInfo region) {
+   Histogram buildHistR(RegionInfo region) {
 	   int unitX = 15;
 	   int sizeX = 360 / unitX; //360 degrees
 	   int l = (int)(Math.sqrt(this.width * this.width + this.height * this.height)/2);
@@ -1213,7 +1251,7 @@ public class BDetection {
 	          writeRegionImage(region, blob, 0, width, height);
    }
    
-   private static Histogram buildHistH(byte[] blob, int width, int height) {
+   static Histogram buildHistH(byte[] blob, int width, int height) {
 	   Histogram hist = new Histogram(10, 0, width);
 	   for (int row = 0; row < height; row++) {
 		   for (int col = 0; col < width; col++) {
@@ -1224,7 +1262,7 @@ public class BDetection {
 	   return hist;
    }
    
-   private static Histogram buildHistV(byte[] blob, int width, int height) {
+   static Histogram buildHistV(byte[] blob, int width, int height) {
 	   Histogram hist = new Histogram(10, 0, height);
 	   for (int row = 0; row < height; row++) {
 		   for (int col = 0; col < width; col++) {
@@ -2429,7 +2467,7 @@ public class BDetection {
 				   else if (tokens.length > 1) {
 					   frame = new Frame(tokens[0]);
 					   for (int i = 1; i < tokens.length; i += 4) {
-						   frame.bubbles.add(new Bubble(Integer.parseInt(tokens[i]),
+						   frame.elements.add(new Element(Integer.parseInt(tokens[i]),
 								   Integer.parseInt(tokens[i+1]),
 								   Integer.parseInt(tokens[i+2]),
 								   Integer.parseInt(tokens[i+3])));
@@ -2473,7 +2511,7 @@ public class BDetection {
 	   Frame[] frames = sortFrames(getTags(filename), bds);
 	   for (int i=0; i < bds.size(); i++) {
 		   
-		   ArrayList<Bubble> bubbles = frames[i].bubbles;
+		   List<Element> bubbles = frames[i].elements;
 		   for (RegionInfo r : bds.get(i).pixCounts) {
 			   int j = 0;
 			   boolean cont = true;
@@ -2513,7 +2551,7 @@ public class BDetection {
 			   }
 		   }
 		   
-		   for (Bubble b : bubbles) {
+		   for (Element b : bubbles) {
 			   if (b.hit == 0) {
 				   falseNegatives.add(frames[i].filename + ": " + b.x1 + ", " + b.y1 + " - " + b.x2 + ", " + b.y2);
 			       fn++;
@@ -2555,43 +2593,6 @@ public class BDetection {
 	   return str;
    }
    
-   public void processWhitePixels() {
-	   int marker = this.textgroup.size(); //mark pixel with number greater than 1
-	   final int width = this.width;
-	   final int height = this.height;
-	   int i = 0;
-	   ArrayList<Integer> seeds = new ArrayList<Integer>();
-	   RegionInfo rInfo = null;
-	   for (int row = 0; row < height; row++) {
-		   for (int col = 0; col < width; col++) {
-			   i = row * width + col;
-			   if (this.pixels[i] == (byte)1) { // white pixel
-				   seeds.add(i);
-			   }
-		   }
-	   }
-	   for (Integer seed : seeds) {
-		   int col = seed % width;
-		   int row = seed / width;
-		   //System.out.println("col=" + col + ", row=" + row + ", marker=" + marker);
-		   rInfo = seedGrowth(seed, marker, width, this.blackPixels,
-				   new Callable1<Boolean>() {
-			   public Boolean call(int idx, int minX, int maxX, int minY, int maxY, byte[] blob) {
-				   return BDetection.isWhiteSpace(idx, 3, width, height, blob);
-			   }
-		   },
-		   new Callable2<Integer>() {
-			   public Integer call(int idx, int val, ArrayList<Integer> queue, byte[] blob) {
-				   return BDetection.addQueueNoRGB(idx, val, queue, blob);
-			   }
-		   }
-				   );
-		   if (rInfo.pixCount > 0) {
-			   //this.whiteRegions.add(rInfo);
-			   marker++;
-		   }
-	   }
-   }
 
    
    public static void main(String[] args) {

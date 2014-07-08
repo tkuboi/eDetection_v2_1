@@ -64,5 +64,9 @@ public class RegionGroup {
    public void setClosed(boolean b) {
       this.closed = b;
    }
+   
+   public String toCSV() {
+	   return "";
+   }
 }
 

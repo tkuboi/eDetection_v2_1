@@ -39,7 +39,7 @@ public class FileUtil {
 			file = new File(filename);
 			writer = new PrintWriter(file);
 			for (String line : lines) {
-				writer.println();
+				writer.println(line);
 			}
 		}
 		catch (IOException ex) {
