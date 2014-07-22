@@ -22,10 +22,32 @@ public class Histogram {
     	this.bins[i] = v;
     }
 
+    public void binWithValue(int i, int v) {
+    	int idx = (this.size - 1) * (i - this.min) / (this.max - this.min);
+    	this.bins[idx] = v;
+    }
+
+    public void binWithValueAdd(int i, int v) {
+    	int idx = (this.size - 1) * (i - this.min) / (this.max - this.min);
+    	this.bins[idx] += v;
+    }
+
+    public int getVal(int i) {
+    	return this.bins[i];
+    }
+
     public int getSize() {
     	return this.size;
     }
-    
+
+    public int getMin() {
+    	return this.min;
+    }
+
+    public int getMax() {
+    	return this.max;
+    }
+
     public int[] getBins() {
     	return this.bins;
     }
@@ -49,5 +71,15 @@ public class Histogram {
     	}
     	str += this.bins[this.size - 1];
     	return str;
+    }
+    
+    public static String getLabels(String name, int size) {
+    	StringBuilder sb = new StringBuilder();
+    	for (int i = 1; i <= size; i++) {
+    	    sb.append(name + "_" + i);
+    	    sb.append(",");
+    	}
+    	sb.setLength(sb.length()-1);
+    	return sb.toString();
     }
 }

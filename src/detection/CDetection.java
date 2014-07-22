@@ -90,16 +90,34 @@ public class CDetection {
 
 			for (int j = i + 1; j < this.whiteRegions.size(); j++) {
 				RegionInfo region2 = this.whiteRegions.get(j);
-				double area1 = Math.abs((double)(region1.maxX - region1.minX) * (double)(region1.maxY - region1.minY));
+				//add as a pair of eyes
+				EyePair eyePair = new EyePair(id++, region1, region2);
+				
+				eyePair.setCombinedFeatures(this.pixels, this.width, this.height);
+				
+				/*double area1 = Math.abs((double)(region1.maxX - region1.minX) * (double)(region1.maxY - region1.minY));
 				double area2 = Math.abs((double)(region2.maxX - region2.minX) * (double)(region2.maxY - region2.minY));
-				double diffArea = Math.abs(area1 - area2) / area1;
-                if (area1 > 250 && area2 > 250 && diffArea < 0.5) {
-				    //add as a pair of eyes
-				    EyePair eyePair = new EyePair(id++, region1, region2);
-				    this.eyePairs.add(eyePair);
-                }
-			}
+
+				eyePair.diffArea = Math.abs(area1 - area2) / (double)(this.width * this.height);
+				double distX = Math.abs((region1.maxX + region1.minX) / 2 - (region2.maxX + region2.minX) / 2);
+				double distY = Math.abs((region1.maxY + region1.minY) / 2 - (region2.maxY + region2.minY) / 2);
+				eyePair.distX = (double)distX / (double)(this.width);
+				eyePair.distY = (double)distY / (double)(this.height);
+				eyePair.distCenters = (double)(distX * distX + distY * distY) / (double)(this.width * this.width + this.height * this.height);*/
+				eyePair.isInsideRegion = checkIsInsideRegion(eyePair);
+				
+				this.eyePairs.add(eyePair);
+ 			}
 		}
+	}
+	
+	public boolean checkIsInsideRegion(EyePair eyePair) {
+		for (RegionInfo whiteRegion : this.whiteRegions) {
+			if (eyePair.minX >= whiteRegion.minX && eyePair.minY >= whiteRegion.minY
+					&& eyePair.maxX <= whiteRegion.maxX && eyePair.maxY <= whiteRegion.maxY)
+				return true;
+		}
+		return false;
 	}
 	
 	public List<String> exportEyePairs() {
@@ -108,8 +126,18 @@ public class CDetection {
 		StringBuilder sb = new StringBuilder();
 		int negCount = 0;
 		System.out.println("The number of eyePairs=" + this.eyePairs.size());
+		//lines.add("filename,"+EyePair.labels());
 		for(EyePair pair : this.eyePairs) {
-			if (pair.diffArea < 0.4 && pair.distCorners < 100 && (pair.isEyes || negCount < 4)) {
+			RegionInfo region1 = pair.getMembers().get(0);
+			RegionInfo region2 = pair.getMembers().get(1);
+			double area1 = Math.abs((double)(region1.maxX - region1.minX) * (double)(region1.maxY - region1.minY));
+			double area2 = Math.abs((double)(region2.maxX - region2.minX) * (double)(region2.maxY - region2.minY));
+			double diffArea = Math.abs(area1 - area2) / area1;
+			if (pair.isEyes)
+				System.out.println(pair.isEyes + ":diffArea=" + pair.diffArea + ", distCenters=" + pair.distCenters + ", distCorners=" + pair.distCorners + ", area1=" + area1 + ", area2=" + area2);
+			if (pair.diffArea < 0.1 && pair.distCenters < 0.1 && pair.distCorners < 100 && area1 > 500 && area2 > 500) {
+				pair.computeHists();
+				pair.setEdgeMap(pixels, width, height);
 				sb.append(header);
 				sb.append(pair.toCSV());
 				//sb.append("\n");
@@ -118,6 +146,7 @@ public class CDetection {
 				if (!pair.isEyes)
 					negCount++;
 			}
+			//System.out.println("pixels.size:" + region1.pixels.size() + ", pixels.size:" + region2.pixels.size());
 		}
 		System.out.println("the number of lines=" + lines.size());
 		return lines;
@@ -229,6 +258,8 @@ public class CDetection {
 							&& r.minY >= e.y1
 							&& r.maxX <= e.x2
 							&& r.maxY <= e.y2
+							&& Math.abs(r.maxX - r.minX - e.x2 + e.x1) < Math.abs(e.x2 - e.x1) * 0.2
+							&& Math.abs(r.maxY - r.minY - e.y2 + e.y1) < Math.abs(e.y2 - e.y1) * 0.2
 							&& e.hit == 0) { // match found in bubbles.txt
 						e.hit = 1;
 						r.isEyes = true;
@@ -277,6 +308,7 @@ public class CDetection {
 			cds.add(cd);
 		}
 		addLabel(path+"eyes.txt", cds);
+		eyeCandidatesInfo.add("filename,"+EyePair.labels());
 		for (CDetection cd : cds)
 			eyeCandidatesInfo.addAll(cd.exportEyePairs());
 		

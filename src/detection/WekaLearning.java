@@ -63,19 +63,6 @@ public abstract class WekaLearning {
 		buildKernel(trainingData);
 	}
 
-	public String classify(Instances instances, int idx) {
-		String predicted = null;
-		try {
-			double pred = this.model.classifyInstance(instances.instance(idx));
-			predicted = instances.classAttribute().value((int) pred);
-			//updateLabel(testData, i, predicted);
-		}
-		catch (Exception ex) {
-			System.err.println(ex.getMessage());
-		}
-		return predicted;
-	}
-	
 	public void classify(List<String> testData, double[] result) {
 		String actual;
 		String predicted;
@@ -90,8 +77,11 @@ public abstract class WekaLearning {
 			imgfile = tokens[0].replace('"', ' ').trim();
 			System.out.println(imgfile+":"+tokens[1]+":"+tokens[2]+":"+tokens[3]+","+tokens[4]+","+tokens[5]+","+tokens[6]);
 			try {
-				predicted = classify(instances, i);
+				double pred = this.model.classifyInstance(instances.instance(i));
 				actual = instances.classAttribute().value((int) instances.instance(i).classValue());
+				predicted = instances.classAttribute().value((int) pred);
+				if (isUpdateLabelOn())
+					updateLabel(testData, i, predicted);
 				System.out.print("actual: " + actual);
 				System.out.println(", predicted: " + predicted);
 				if (actual.equals(predicted)) {
@@ -125,7 +115,7 @@ public abstract class WekaLearning {
 		System.out.println("TP=" + tp + ", FP=" + fp + ", TN=" + tn + ", FN=" + fn + ", Precision=" + pre + ", Recall=" + rec);
 	}
 	
-	private static void updateLabel(List<String> data, int i, String label) {
+	static void updateLabel(List<String> data, int i, String label) {
 		StringBuilder sb = new StringBuilder();
 		String tokens[] = data.get(i).split(",");
 		tokens[1] = label;
@@ -136,5 +126,7 @@ public abstract class WekaLearning {
 		data.set(i, sb.substring(0, sb.length() - 1));
 	}
 
-	public abstract void classify(String filename, double[] result);
+	boolean isUpdateLabelOn() {
+		return false;
+	}
 }

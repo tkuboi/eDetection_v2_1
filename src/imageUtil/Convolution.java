@@ -43,7 +43,7 @@ public class Convolution {
 	   byte[] result = new byte[width * height * 3];
 	   return result;
    }
-   
+ 
    public static byte[] gradientMask(byte[] grayimg, int width, int height, int[] kernel, int x, int y, int t) {
 	   int max = 0;
 	   int idx = 0;

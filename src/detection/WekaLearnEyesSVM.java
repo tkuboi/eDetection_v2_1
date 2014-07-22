@@ -16,7 +16,6 @@ public class WekaLearnEyesSVM extends WekaLearning {
 		super(model, dataCreator);
 	}
 
-	@Override
 	public void classify(String filename, double[] result) {
 		// TODO Auto-generated method stub
 		List<String> testData = FileUtil.readCSV(filename);
@@ -24,49 +23,62 @@ public class WekaLearnEyesSVM extends WekaLearning {
 		classify(testData, result);
 	}
 	
-	@Override
-	public String classify(Instances instances, int idx) {
-		String predicted = super.classify(instances, idx);
-		//updateLabel(testData, idx, predicted);
-		return predicted;
-	}
-	
 	public static List<String> run(List<String> data, int ratioTrain, int ratioTest, int weight, double[] result) {
 		List<String> newdata = new ArrayList<String>();
-		int ratio = ratioTrain + ratioTest;
-		int trainsize = ratioTrain * data.size() / ratio;
-		long seed = System.nanoTime();
-		Collections.shuffle(data, new Random(seed));
-		WekaLearning weka = new WekaLearnEyesSVM(new SMO(), new WekaDataEyes());
+		int total = ratioTrain + ratioTest;
+		int trainsize = ratioTrain * data.size() / total;
+		//long seed = System.nanoTime();
+		//Collections.shuffle(data, new Random(seed));
+		SMO scheme = new SMO();
+		try {
+			//scheme.setOptions(weka.core.Utils.splitOptions("-C 1.0 -L 0.0010 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\""));
+			scheme.setOptions(weka.core.Utils.splitOptions("-C 2.0 -L 0.0010 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 1.0\""));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		WekaLearning weka = new WekaLearnEyesSVM(scheme, new WekaDataEyesCombFeat());
 		weka.buildClassifier(data.subList(0, trainsize));
-		if (ratioTrain < ratio) {
+		if (ratioTrain < total) {
 			weka.classify(data.subList(trainsize, data.size() - 1), result);
-			newdata.addAll(data.subList(trainsize, data.size() - 1));
+			/*newdata.addAll(data.subList(trainsize, data.size() - 1));
 			for (int i = 0; i < weight; i++)
 			    newdata.addAll(data.subList(0, trainsize)); //weighting*/
 		}
+		System.out.println("trainsize=" + trainsize + ", total=" + data.size());
 		return newdata;
 	}
 	
 	public static void main(String[] args) {
 		List<String> data = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/eyeCandidatesInfo.txt");
-		//data.remove(0);
+		data.remove(0);
 		int trials = 10;
 		double[] result1 = {0,0,0,0};
 		double[] result2 = {0,0,0,0};
 		Boolean semi = false;
-		/*if (!semi) {
-			List<String> data2 = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
+		if (!semi) {
+			List<String> data2 = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/eyeCandidatesInfo2.txt");
 			data2.remove(0);
 			data.addAll(data2);
-		}*/
+		}
 		
+		long seed = System.nanoTime();
+		Random random = new Random(seed);
 		for (int i=0; i < trials; i++) {
-			List<String> newdata = WekaLearnEyesSVM.run(data, 3, 1, 1, result1);
+			Collections.shuffle(data, random);
+			List<String> newdata = WekaLearnEyesSVM.run(data, 2, 1, 1, result1);
 			if (semi) {
 				FileUtil.writeCSV(newdata, "SemiSVTrainingSet.csv");
 				System.out.println("Testing Semi Supervised Learning");
-				WekaLearning model = new WekaLearnEyesSVM(new SMO(), new WekaDataEyes());
+				SMO scheme = new SMO();
+				try {
+					scheme.setOptions(weka.core.Utils.splitOptions("-C 1.0 -L 0.0010 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\""));
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				WekaLearnEyesSVM model = new WekaLearnEyesSVM(scheme, new WekaDataEyesCombFeat());
 				
 				model.buildClassifier(newdata);
 				model.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv", result2);

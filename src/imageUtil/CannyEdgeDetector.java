@@ -20,7 +20,16 @@ public class CannyEdgeDetector {
 		return suppressNonMaxima(edgemap, width, height);
 	}
 	
-	private static byte[] suppressNonMaxima(GradInfo[] edgemap, int width, int height) {
+	public static GradInfo[] genGradInfo(byte[] grayimg, int width, int height, int t) {
+		int[] filter = MaskFactory.getGaussianFilter3();
+		byte[] result = Convolution.filterGray(grayimg, width, height, filter, 3, 3);
+		GradInfo[] edgemap  = Convolution.getGradAtan(result, width, height,
+				MaskFactory.getSobelFilter3x(), MaskFactory.getSobelFilter3y(),
+				3, 3, t);
+		return edgemap;
+	}
+
+	public static byte[] suppressNonMaxima(GradInfo[] edgemap, int width, int height) {
 		byte[] result = new byte[width * height];
 		int idx = 0;
 		int x = -1;
