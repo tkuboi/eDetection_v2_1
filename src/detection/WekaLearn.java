@@ -347,11 +347,12 @@ public class WekaLearn {
 		int match = 0;
 		int mismatch = 0;
 		int tp = 0, fp = 0, tn = 0, fn = 0;
-		//ArrayList<String> testData = readCSV(filename);
+		List<String> newData = new ArrayList<String>();
 		//testData.remove(0);
 		FastVector vector = createVector();
 		Instances instances = createInstances(vector, testData.size(), testData);
 		for (int i = 0; i < testData.size(); i++) {
+			newData.add(testData.get(i));
 			tokens = testData.get(i).split(",");
 			imgfile = tokens[0].replace('"', ' ').trim();
 			System.out.println(imgfile+":"+tokens[1]+":"+tokens[2]+":"+tokens[3]+","+tokens[4]+","+tokens[5]+","+tokens[6]);
@@ -360,7 +361,7 @@ public class WekaLearn {
 				actual = instances.classAttribute().value((int) instances.instance(i).classValue());
 				predicted = instances.classAttribute().value((int) pred);
 				//instances.instance(i).setClassValue(predicted);
-				updateLabel(testData, i, predicted);
+				updateLabel(newData, i, predicted);
 				System.out.print("actual: " + actual);
 				System.out.println(", predicted: " + predicted);
 				if (actual.equals(predicted)) {
@@ -392,7 +393,7 @@ public class WekaLearn {
 		result[3] += f;
 		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)) + ", total instances=" + (match + mismatch));
 		System.out.println("TP=" + tp + ", FP=" + fp + ", TN=" + tn + ", FN=" + fn + ", Precision=" + ((double)tp/(double)(tp + fp)) + ", Recall=" + ((double)tp/(double)(tp + fn)));
-		return testData;
+		return newData;
 	}
 	
 	private static void updateLabel(List<String> data, int i, String label) {
@@ -452,7 +453,7 @@ public class WekaLearn {
 		int trials = 5;
 		double[] result1 = {0,0,0,0};
 		double[] result2 = {0,0,0,0};
-		Boolean semi = true;
+		Boolean semi = false;
 		if (!semi) {
 			List<String> data2 = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
 			data2.remove(0);

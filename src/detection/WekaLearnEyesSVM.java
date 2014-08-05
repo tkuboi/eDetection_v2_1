@@ -51,7 +51,7 @@ public class WekaLearnEyesSVM extends WekaLearning {
 	}
 	
 	public static void main(String[] args) {
-		List<String> data = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/eyeCandidatesInfo.txt");
+		List<String> data = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/eyeCandidatesInfo1.txt");
 		data.remove(0);
 		int trials = 10;
 		double[] result1 = {0,0,0,0};

@@ -41,11 +41,18 @@ public class EyePair extends RegionGroup
 	public int xOverlap; //0:no, 1:less than 50%, 2:more
 	public int yOverlap;
 	public Histogram edgeMap;
-	public int atan20;
-	public int atan70;
-	public int atan110;
-	public int atan160;
+	public Histogram atanHistH45;
+	public Histogram atanHistH90;
+	public Histogram atanHistH135;
+	public Histogram atanHistH0;
+	public Histogram atanHistV45;
+	public Histogram atanHistV90;
+	public Histogram atanHistV135;
+	public Histogram atanHistV0;
 	public int atan0;
+	public int atan45;
+	public int atan90;
+	public int atan135;
 	
 	
 	public EyePair(int id) {
@@ -57,11 +64,6 @@ public class EyePair extends RegionGroup
 		
 		isInsideRegion = false;
 		isEyes = false;
-		atan20 = 0;
-		atan70 = 0;
-		atan110 = 0;
-		atan160 = 0;
-		atan0 = 0;
 
 		this.addMember(region1);
 		this.addMember(region2);
@@ -79,12 +81,19 @@ public class EyePair extends RegionGroup
 		double area2 = Math.abs((double)(region2.maxX - region2.minX) * (double)(region2.maxY - region2.minY));
 		diffArea = area1 > 0 && area2 > 0 ? Math.abs(area1 - area2) / (double)(width * height) : 99999999;
 		diffX1 = Math.abs(((double)(region1.minX - region2.minX)) / (double)width);
+		//diffX1 = discretize(diffX1, 0.01);
 		diffX2 = Math.abs(((double)(region1.maxX - region2.maxX)) / (double)width);
+		//diffX2 = discretize(diffX2, 0.01);
 		diffY1 = Math.abs(((double)(region1.minY - region2.minY)) / (double)height);
+		//diffY1 = discretize(diffY1, 0.01);
 		diffY2 = Math.abs(((double)(region1.maxY - region2.maxY)) / (double)height);
+		//diffY2 = discretize(diffY2, 0.01);
 		distX = Math.abs((region1.maxX + region1.minX) / 2 - (region2.maxX + region2.minX) / 2) / (double)width;
+		//distX = discretize(distX, 0.01);
 		distY = Math.abs((region1.maxY + region1.minY) / 2 - (region2.maxY + region2.minY) / 2) / (double)height;
+		//distY = discretize(distY, 0.01);
 		distCenters = (double)(distX * distX + distY * distY) / (double)(width * width + height * height);
+		//distCenters = discretize(distCenters, 0.00000001);
 		minX = (region1.minX <= region2.minX ? region1.minX : region2.minX);
 		minY = (region1.minY <= region2.minY ? region1.minY : region2.minY);
 		maxX = (region1.maxX >= region2.maxX ? region1.maxX : region2.maxX);
@@ -124,6 +133,7 @@ public class EyePair extends RegionGroup
 			distCorners = Math.abs(region1.minX - region2.minX) + Math.abs(region1.minY - region2.minY);
 		else
 			distCorners = Math.abs(region1.maxX - region2.maxX) + Math.abs(region1.maxY - region2.maxY);
+		//distCorners = discretize(distCorners, 1.0);
 		
 		setEdgeFeatures(pixels, width, height, region1, region2);
 
@@ -244,13 +254,24 @@ public class EyePair extends RegionGroup
 		int y2 = maxY + 3 <= height ? maxY + 3 :height;
 		byte[] subRegion = new byte[(x2 - x1 + 1) * (y2 - y1 + 1)];
 		subRegion = getSubBlob(reduceChannel(pixels, width, height),width,x1,y1,x2,y2);
-		
+
 		edgeMap = new Histogram(100, 0, (x2 - x1 + 1) * (y2 - y1 + 1));
 		GradInfo[] gradInfo = CannyEdgeDetector.genGradInfo(subRegion, (x2 - x1 + 1), (y2 - y1 + 1), 1);
 		byte[] edges = CannyEdgeDetector.suppressNonMaxima(gradInfo, (x2 - x1 + 1), (y2 - y1 + 1));
 		for (int i = 0; i < edges.length; i++)
 			edgeMap.binWithValueAdd(i, edges[i] & 0xff);
 		
+		atanHistH0 = new Histogram(10,0,(y2 - y1 + 1));
+		atanHistH45 = new Histogram(10,0,(y2 - y1 + 1));
+		atanHistH90 = new Histogram(10,0,(y2 - y1 + 1));
+		atanHistH135 = new Histogram(10,0,(y2 - y1 + 1));
+		atanHistV0 = new Histogram(10,0,(x2 - x1 + 1));
+		atanHistV45 = new Histogram(10,0,(x2 - x1 + 1));
+		atanHistV90 = new Histogram(10,0,(x2 - x1 + 1));
+		atanHistV135 = new Histogram(10,0,(x2 - x1 + 1));
+		
+		atan0 = atan45 = atan90 = atan135 = 0;
+
 		int idx = 0;
 		for (int row = 0; row < (y2 - y1 + 1); row++) {
 			for (int col = 0; col < (x2 - x1 + 1); col++) {
@@ -258,28 +279,42 @@ public class EyePair extends RegionGroup
 				if (gradInfo[idx].grad > 0) {
 					if (gradInfo[idx].atan >= 0 && gradInfo[idx].atan < 20) { // top - bot
 						//check 2 neighbors
-						atan20 += 1;
+						atanHistH0.bin(row);
+						atanHistV0.bin(col);
+						atan0 += 1;
 					}
 					else if (gradInfo[idx].atan >= 20 && gradInfo[idx].atan < 70) { //bot L - top R
 						//check 2 neighbors
-						atan70 += 1;
+						atanHistH45.bin(row);
+						atanHistV45.bin(col);
+						atan45 += 1;
 					}
 					else if (gradInfo[idx].atan >= 70 && gradInfo[idx].atan < 110) { //L - R
 						//check 2 neighbors
-						atan110 += 1;
+						atanHistH90.bin(row);
+						atanHistV90.bin(col);
+						atan90 += 1;
 					}
 					else if (gradInfo[idx].atan >= 110 && gradInfo[idx].atan < 160) { //top L - bot R
 						//check 2 neighbors
-						atan160 += 1;
+						atanHistH135.bin(row);
+						atanHistV135.bin(col);
+						atan135 += 1;
 					}
 					else { //top - bot
 						//check 2 neighbors
+						atanHistH0.bin(row);
+						atanHistV0.bin(col);
 						atan0 += 1;
 					}
 				}
 			}
 		}
 
+		//atan0 = discretize(atan0, 5);
+		//atan45 = discretize(atan45, 5);
+		//atan90 = discretize(atan90, 5);
+		//atan135 = discretize(atan135, 5);
 	}
 
 	public static byte[] getSubBlob(byte[] pixels, int width, int x1, int y1, int x2, int y2) {
@@ -305,6 +340,10 @@ public class EyePair extends RegionGroup
 			}
 		}
 		return result;
+	}
+	
+	public static int discretize(double val, double denom) {
+		return (int)(val / denom);
 	}
 
 	@Override
@@ -353,10 +392,17 @@ public class EyePair extends RegionGroup
         sb.append(this.xOverlap + ",");		
         sb.append(this.yOverlap + ",");		
         sb.append(this.atan0 + ",");		
-        sb.append(this.atan20 + ",");		
-        sb.append(this.atan70 + ",");		
-        sb.append(this.atan110 + ",");		
-        sb.append(this.atan160);		
+        sb.append(this.atan45 + ",");		
+        sb.append(this.atan90 + ",");		
+        sb.append(this.atan135 + ",");		
+        sb.append(this.atanHistH0.toCsvString() + ",");		
+        sb.append(this.atanHistH45.toCsvString() + ",");		
+        sb.append(this.atanHistH90.toCsvString() + ",");		
+        sb.append(this.atanHistH135.toCsvString() + ",");	
+        sb.append(this.atanHistV0.toCsvString() + ",");		
+        sb.append(this.atanHistV45.toCsvString() + ",");		
+        sb.append(this.atanHistV90.toCsvString() + ",");		
+        sb.append(this.atanHistV135.toCsvString());	
 
 		/*for (RegionInfo member : super.getMembers()) {
 			sb.append(",");
@@ -412,10 +458,24 @@ public class EyePair extends RegionGroup
 		labels += "xOverlap,";
 		labels += "yOverlap,";
 		labels += "atan0,";
-		labels += "atan20,";
-		labels += "atan70,";
-		labels += "atan110,";
-		labels += "atan160";
+		labels += "atan45,";
+		labels += "atan90,";
+		labels += "atan135,";
+		labels += Histogram.getLabels("atanHistH0", 10);
+		labels += ",";
+		labels += Histogram.getLabels("atanHistH45", 10);
+		labels += ",";
+		labels += Histogram.getLabels("atanHistH90", 10);
+		labels += ",";
+		labels += Histogram.getLabels("atanHistH135", 10);
+		labels += ",";
+		labels += Histogram.getLabels("atanHistV0", 10);
+		labels += ",";
+		labels += Histogram.getLabels("atanHistV45", 10);
+		labels += ",";
+		labels += Histogram.getLabels("atanHistV90", 10);
+		labels += ",";
+		labels += Histogram.getLabels("atanHistV135", 10);
 				
 		/*labels += RegionInfo.labels(1);
 		labels += ",";

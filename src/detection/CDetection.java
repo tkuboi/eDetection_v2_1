@@ -135,7 +135,7 @@ public class CDetection {
 			double diffArea = Math.abs(area1 - area2) / area1;
 			if (pair.isEyes)
 				System.out.println(pair.isEyes + ":diffArea=" + pair.diffArea + ", distCenters=" + pair.distCenters + ", distCorners=" + pair.distCorners + ", area1=" + area1 + ", area2=" + area2);
-			if (pair.diffArea < 0.1 && pair.distCenters < 0.1 && pair.distCorners < 100 && area1 > 500 && area2 > 500) {
+			if (pair.isEyes || (pair.diffArea < 0.1 && pair.distCenters <= 0.1 && pair.distCorners <= 100 && area1 > 500 && area2 > 500  && area1 < 1500 && area2 < 1500)) {
 				pair.computeHists();
 				pair.setEdgeMap(pixels, width, height);
 				sb.append(header);
@@ -274,6 +274,7 @@ public class CDetection {
 		// TODO Auto-generated method stub
 		String path = "./image1-2/";
 		//String path = "./image_0670/";
+		String outfile = "eyeCandidatesInfo1.txt";
 		File dir = new File(path);
 		File[] files = dir.listFiles(new FilenameFilter() {
 			public boolean accept(File directory, String fileName) {
@@ -312,8 +313,8 @@ public class CDetection {
 		for (CDetection cd : cds)
 			eyeCandidatesInfo.addAll(cd.exportEyePairs());
 		
-		System.out.println("The number of eyeCandidatesInfo=" + eyeCandidatesInfo.size());
-		FileUtil.writeCSV(eyeCandidatesInfo, "eyeCandidatesInfo.txt");
+		System.out.println("The number of " + outfile + " = " + eyeCandidatesInfo.size());
+		FileUtil.writeCSV(eyeCandidatesInfo, outfile);
 	}
 
 }

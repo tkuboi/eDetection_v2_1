@@ -9,7 +9,7 @@ import weka.core.Instances;
 
 public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 
-	private final int numFields = 220;
+	private final int numFields = 227;
 
 	public WekaDataEyesCombFeat() {
 		super();
@@ -250,10 +250,17 @@ public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 		Attribute Attribute212 = new Attribute("xOverlap");
 		Attribute Attribute213 = new Attribute("yOverlap");
 		Attribute Attribute214 = new Attribute("atan0");
-		Attribute Attribute215 = new Attribute("atan20");
-		Attribute Attribute216 = new Attribute("atan70");
-		Attribute Attribute217 = new Attribute("atan110");
-		Attribute Attribute218 = new Attribute("atan160");
+		Attribute Attribute215 = new Attribute("atan45");
+		Attribute Attribute216 = new Attribute("atan90");
+		Attribute Attribute217 = new Attribute("atan135");
+		Attribute Attribute218 = new Attribute("atanHistH0");		
+		Attribute Attribute219 = new Attribute("atanHistH45");		
+		Attribute Attribute220 = new Attribute("atanHistH90");		
+		Attribute Attribute221 = new Attribute("atanHistH135");	
+		Attribute Attribute222 = new Attribute("atanHistV0");		
+		Attribute Attribute223 = new Attribute("atanHistV45");		
+		Attribute Attribute224 = new Attribute("atanHistV90");		
+		Attribute Attribute225 = new Attribute("atanHistV135");	
 
 		FastVector fvWekaAttributes = new FastVector(numFields);
 		fvWekaAttributes.addElement(Attribute0);    
@@ -475,6 +482,13 @@ public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 		fvWekaAttributes.addElement(Attribute216);    
 		fvWekaAttributes.addElement(Attribute217);    
 		fvWekaAttributes.addElement(Attribute218);    
+		fvWekaAttributes.addElement(Attribute219);    
+		fvWekaAttributes.addElement(Attribute220);    
+		fvWekaAttributes.addElement(Attribute221);    
+		fvWekaAttributes.addElement(Attribute222);    
+		fvWekaAttributes.addElement(Attribute223);    
+		fvWekaAttributes.addElement(Attribute224);    
+		fvWekaAttributes.addElement(Attribute225);    
 		   
 		fvWekaAttributes.addElement(ClassAttribute);
 
@@ -710,9 +724,16 @@ public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 			vector.setValue((Attribute)fvWekaAttributes.elementAt(216), Double.parseDouble(tokens[222].trim()));
 			vector.setValue((Attribute)fvWekaAttributes.elementAt(217), Double.parseDouble(tokens[223].trim()));
 			vector.setValue((Attribute)fvWekaAttributes.elementAt(218), Double.parseDouble(tokens[224].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(219), Double.parseDouble(tokens[225].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(220), Double.parseDouble(tokens[226].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(221), Double.parseDouble(tokens[227].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(222), Double.parseDouble(tokens[228].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(223), Double.parseDouble(tokens[229].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(224), Double.parseDouble(tokens[230].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(225), Double.parseDouble(tokens[231].trim()));
 
 			//System.out.println(tokens[1].trim());
-			vector.setValue((Attribute)fvWekaAttributes.elementAt(219), tokens[1].trim());
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(226), tokens[1].trim());
 			trainningSet.add(vector);
 		}
 		int cIdx=trainningSet.numAttributes()-1;
