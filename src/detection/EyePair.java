@@ -7,6 +7,7 @@ import model.Histogram;
 
 public class EyePair extends RegionGroup
 {
+	public double area;
 	public double diffArea;
 	public double diffX1;
 	public double diffX2;
@@ -79,26 +80,27 @@ public class EyePair extends RegionGroup
 		RegionInfo region2 = this.getMembers().get(1);
 		double area1 = Math.abs((double)(region1.maxX - region1.minX) * (double)(region1.maxY - region1.minY));
 		double area2 = Math.abs((double)(region2.maxX - region2.minX) * (double)(region2.maxY - region2.minY));
-		diffArea = area1 > 0 && area2 > 0 ? Math.abs(area1 - area2) / (double)(width * height) : 99999999;
+		diffArea = area1 > 0 && area2 > 0 ? Math.min(area1,area2) / Math.max(area1,area2) : 0;
 		diffX1 = Math.abs(((double)(region1.minX - region2.minX)) / (double)width);
-		//diffX1 = discretize(diffX1, 0.01);
+		diffX1 = discretize(diffX1, 0.001);
 		diffX2 = Math.abs(((double)(region1.maxX - region2.maxX)) / (double)width);
-		//diffX2 = discretize(diffX2, 0.01);
+		diffX2 = discretize(diffX2, 0.001);
 		diffY1 = Math.abs(((double)(region1.minY - region2.minY)) / (double)height);
-		//diffY1 = discretize(diffY1, 0.01);
+		diffY1 = discretize(diffY1, 0.001);
 		diffY2 = Math.abs(((double)(region1.maxY - region2.maxY)) / (double)height);
-		//diffY2 = discretize(diffY2, 0.01);
+		diffY2 = discretize(diffY2, 0.001);
 		distX = Math.abs((region1.maxX + region1.minX) / 2 - (region2.maxX + region2.minX) / 2) / (double)width;
-		//distX = discretize(distX, 0.01);
+		distX = discretize(distX, 0.001);
 		distY = Math.abs((region1.maxY + region1.minY) / 2 - (region2.maxY + region2.minY) / 2) / (double)height;
-		//distY = discretize(distY, 0.01);
+		distY = discretize(distY, 0.001);
 		distCenters = (double)(distX * distX + distY * distY) / (double)(width * width + height * height);
 		//distCenters = discretize(distCenters, 0.00000001);
 		minX = (region1.minX <= region2.minX ? region1.minX : region2.minX);
 		minY = (region1.minY <= region2.minY ? region1.minY : region2.minY);
 		maxX = (region1.maxX >= region2.maxX ? region1.maxX : region2.maxX);
 		maxY = (region1.maxY >= region2.maxY ? region1.maxY : region2.maxY);
-		
+		area = (double)(maxX- minX) * (maxY - minY) / (double)(width * height);
+		area = discretize(area, 0.0001);
 		if (region1.maxX < region2.minX || region2.maxX < region1.minX)
 			xOverlap = 0;
 		else if (maxX - minX > (region1.xRange + region2.xRange) * 0.5)
@@ -113,9 +115,9 @@ public class EyePair extends RegionGroup
 		else
 			yOverlap = 2;
 
-		diffDistBtwCenters = (region1.distBtwCenters - region2.distBtwCenters) / ((region1.distBtwCenters + region2.distBtwCenters) / 2);
-		diffPercentArea = region1.percentArea * region2.percentArea;
-		diffBpRatio = region1.bpRatio * region2.bpRatio;
+		diffDistBtwCenters = (region1.distBtwCenters + region2.distBtwCenters > 0 ? (float)(region1.distBtwCenters - region2.distBtwCenters) / ((float)(region1.distBtwCenters + region2.distBtwCenters) / 2.0f) : 0 );
+		diffPercentArea = region1.percentArea > 0 && region2.percentArea > 0 ? Math.min(region1.percentArea, region2.percentArea) / Math.max(region1.percentArea, region2.percentArea) : 0;
+		diffBpRatio = region1.bpRatio > 0 && region2.bpRatio > 0 ? Math.min(region1.bpRatio, region2.bpRatio) / Math.max(region1.bpRatio, region2.bpRatio) : 0;
 		avPercentArea = (region1.percentArea + region2.percentArea) / 2.0;
 		avBpRatio = (region1.bpRatio + region2.bpRatio) / 2.0;
 		
@@ -277,25 +279,30 @@ public class EyePair extends RegionGroup
 			for (int col = 0; col < (x2 - x1 + 1); col++) {
 				idx = row * (x2 - x1 + 1) + col;
 				if (gradInfo[idx].grad > 0) {
-					if (gradInfo[idx].atan >= 0 && gradInfo[idx].atan < 20) { // top - bot
+					double atan = gradInfo[idx].atan * 180 / Math.PI;
+					//System.out.println(atan);
+					if ((atan > -20  && atan < 20)) { // top - bot
 						//check 2 neighbors
 						atanHistH0.bin(row);
 						atanHistV0.bin(col);
 						atan0 += 1;
 					}
-					else if (gradInfo[idx].atan >= 20 && gradInfo[idx].atan < 70) { //bot L - top R
+					else if ((atan >= 20 && atan < 70)
+							|| (atan <= -20 && atan > -70)) { //bot L - top R
 						//check 2 neighbors
 						atanHistH45.bin(row);
 						atanHistV45.bin(col);
 						atan45 += 1;
 					}
-					else if (gradInfo[idx].atan >= 70 && gradInfo[idx].atan < 110) { //L - R
+					else if ((atan >= 70 && atan < 110)
+							|| (atan <= -70 && atan > -110)) { //L - R
 						//check 2 neighbors
 						atanHistH90.bin(row);
 						atanHistV90.bin(col);
 						atan90 += 1;
 					}
-					else if (gradInfo[idx].atan >= 110 && gradInfo[idx].atan < 160) { //top L - bot R
+					else if ((atan >= 110 && atan < 160)
+							|| (atan <= -110 && atan > -160)) { //top L - bot R
 						//check 2 neighbors
 						atanHistH135.bin(row);
 						atanHistV135.bin(col);
@@ -311,10 +318,10 @@ public class EyePair extends RegionGroup
 			}
 		}
 
-		//atan0 = discretize(atan0, 5);
-		//atan45 = discretize(atan45, 5);
-		//atan90 = discretize(atan90, 5);
-		//atan135 = discretize(atan135, 5);
+		atan0 = discretize(atan0, 10);
+		atan45 = discretize(atan45, 10);
+		atan90 = discretize(atan90, 10);
+		atan135 = discretize(atan135, 10);
 	}
 
 	public static byte[] getSubBlob(byte[] pixels, int width, int x1, int y1, int x2, int y2) {
@@ -349,7 +356,7 @@ public class EyePair extends RegionGroup
 	@Override
 	public String toCSV() {
 		StringBuilder sb = new StringBuilder();
-		sb.append(this.isEyes + ",");
+		sb.append((this.isEyes ? 1 : 0) + ",");
 		sb.append(this.minX + ",");
 		sb.append(this.minY + ",");
 		sb.append(this.maxX + ",");
@@ -363,17 +370,17 @@ public class EyePair extends RegionGroup
 		sb.append(this.distCorners + ",");
 		sb.append(this.distX + ",");
 		sb.append(this.distY + ",");
-		sb.append(this.isInsideRegion + ",");
+		sb.append((this.isInsideRegion ? 1 : 0) + ",");
 
-		sb.append(this.sumHistH.toCsvString() + ",");
-		sb.append(this.sumHistV.toCsvString() + ",");
-		sb.append(this.sumHistR.toCsvString() + ",");
+		sb.append(this.sumHistH.toCsvStringDiscretized(10) + ",");
+		sb.append(this.sumHistV.toCsvStringDiscretized(10) + ",");
+		sb.append(this.sumHistR.toCsvStringDiscretized(10) + ",");
 
 		sb.append(this.diffHistH.toCsvString() + ",");
 		sb.append(this.diffHistV.toCsvString() + ",");
 		sb.append(this.diffHistR.toCsvString() + ",");
 		
-		sb.append(this.edgeMap.toCsvString() + ",");
+		sb.append(this.edgeMap.toCsvStringDiscretized(10) + ",");
 		
 		sb.append(this.diffDistBtwCenters + ",");
 		sb.append(this.diffPercentArea + ",");
@@ -393,16 +400,17 @@ public class EyePair extends RegionGroup
         sb.append(this.yOverlap + ",");		
         sb.append(this.atan0 + ",");		
         sb.append(this.atan45 + ",");		
-        sb.append(this.atan90 + ",");		
+        sb.append(this.atan90+ ",");		
         sb.append(this.atan135 + ",");		
-        sb.append(this.atanHistH0.toCsvString() + ",");		
-        sb.append(this.atanHistH45.toCsvString() + ",");		
-        sb.append(this.atanHistH90.toCsvString() + ",");		
-        sb.append(this.atanHistH135.toCsvString() + ",");	
-        sb.append(this.atanHistV0.toCsvString() + ",");		
-        sb.append(this.atanHistV45.toCsvString() + ",");		
-        sb.append(this.atanHistV90.toCsvString() + ",");		
-        sb.append(this.atanHistV135.toCsvString());	
+        sb.append(this.atanHistH0.toCsvStringDiscretized(10) + ",");		
+        sb.append(this.atanHistH45.toCsvStringDiscretized(10) + ",");		
+        sb.append(this.atanHistH90.toCsvStringDiscretized(10) + ",");		
+        sb.append(this.atanHistH135.toCsvStringDiscretized(10) + ",");	
+        sb.append(this.atanHistV0.toCsvStringDiscretized(10) + ",");		
+        sb.append(this.atanHistV45.toCsvStringDiscretized(10) + ",");		
+        sb.append(this.atanHistV90.toCsvStringDiscretized(10) + ",");		
+        sb.append(this.atanHistV135.toCsvStringDiscretized(10) + ",");
+        sb.append(this.area);
 
 		/*for (RegionInfo member : super.getMembers()) {
 			sb.append(",");
@@ -476,6 +484,8 @@ public class EyePair extends RegionGroup
 		labels += Histogram.getLabels("atanHistV90", 10);
 		labels += ",";
 		labels += Histogram.getLabels("atanHistV135", 10);
+		labels += ",";
+		labels += "area";
 				
 		/*labels += RegionInfo.labels(1);
 		labels += ",";

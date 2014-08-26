@@ -1,5 +1,6 @@
 package detection;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
@@ -63,7 +64,7 @@ public abstract class WekaLearning {
 		buildKernel(trainingData);
 	}
 
-	public void classify(List<String> testData, double[] result) {
+	public List<String> classify(List<String> testData, double[] result) {
 		String actual;
 		String predicted;
 		String imgfile;
@@ -71,29 +72,31 @@ public abstract class WekaLearning {
 		int match = 0;
 		int mismatch = 0;
 		int tp = 0, fp = 0, tn = 0, fn = 0;
+		List<String> newData = new ArrayList<String>();
 		Instances instances = createData(testData.size(), testData);
 		for (int i = 0; i < testData.size(); i++) {
 			tokens = testData.get(i).split(",");
 			imgfile = tokens[0].replace('"', ' ').trim();
+			newData.add(testData.get(i));
 			System.out.println(imgfile+":"+tokens[1]+":"+tokens[2]+":"+tokens[3]+","+tokens[4]+","+tokens[5]+","+tokens[6]);
 			try {
 				double pred = this.model.classifyInstance(instances.instance(i));
 				actual = instances.classAttribute().value((int) instances.instance(i).classValue());
 				predicted = instances.classAttribute().value((int) pred);
 				if (isUpdateLabelOn())
-					updateLabel(testData, i, predicted);
+					updateLabel(newData, i, predicted);
 				System.out.print("actual: " + actual);
 				System.out.println(", predicted: " + predicted);
 				if (actual.equals(predicted)) {
 					match++;
-					if (predicted.equals("true"))
+					if (predicted.equals("1"))
 						tp++;
 					else
 						tn++;
 				}
 				else {
 					mismatch++;
-					if (predicted.equals("true"))
+					if (predicted.equals("1"))
 						fp++;
 					else
 						fn++;
@@ -113,6 +116,7 @@ public abstract class WekaLearning {
 		result[3] += f;
 		System.out.println("Agree=" + match + ", disagree=" + mismatch + ", %Agree=" + ((double)match/(double)(match + mismatch)) + ", total instances=" + (match + mismatch));
 		System.out.println("TP=" + tp + ", FP=" + fp + ", TN=" + tn + ", FN=" + fn + ", Precision=" + pre + ", Recall=" + rec);
+		return newData;
 	}
 	
 	static void updateLabel(List<String> data, int i, String label) {

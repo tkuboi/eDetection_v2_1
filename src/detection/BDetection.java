@@ -290,6 +290,16 @@ public class BDetection {
       this.blackPixels = andOp(horz, vert);
    }
 
+   public void setBlackPixels() {
+	   this.blackPixels = new byte[this.width * this.height];
+	   for (int row = 0; row < this.height; row++) {
+		   for (int col = 0; col < this.width; col++) {
+			   int idx = row * this.width + col;
+			   this.blackPixels[idx] = (this.pixels[idx * 3] == (byte)1 ? (byte)0 : (byte)1);
+		   }
+	   }
+   }
+
    private byte[] connectHorizontal(int c) {
       byte[] horz = new byte[this.width * this.height];
       for (int row = 0; row < this.height; row++) {
@@ -1211,7 +1221,7 @@ public class BDetection {
 	      writeRegionImage(region, blob, 0, width, height);
    }
    
-   private void analyzeContent(RegionInfo region, Boolean write) {
+   void analyzeContent(RegionInfo region, Boolean write) {
 	      int maxX = (region.maxX + 4 <= this.width ? region.maxX + 4 : this.width);
 	      int minX = (region.minX - 4 >= 0 ? region.minX - 4 : 0);
 	      int maxY = (region.maxY + 4 <= this.height ? region.maxY + 4 : this.height);
@@ -2293,7 +2303,7 @@ public class BDetection {
 	   }
 
 
-   private double calcAverageBW(RegionInfo region) {
+   double calcAverageBW(RegionInfo region) {
       double bp = 0.0;
       for (RegionInfo r : region.rg.getMembers()) {
          bp += r.pixCount;
@@ -2301,7 +2311,15 @@ public class BDetection {
       double result = bp / region.pixCount;
       return result;
    }
-
+   
+   void setAverageBW(RegionInfo region) {
+	   //region.bpRatio = calcAverageBW(region);
+   }
+   
+   void setPercentArea(RegionInfo region) {
+	   region.percentArea = ((double)(region.xRange * region.yRange)) / ((double)this.width * (double)this.height);
+   }
+  
    private boolean scanVertically(int marker) {
       boolean result = true;
       int whitePerCol = 0;

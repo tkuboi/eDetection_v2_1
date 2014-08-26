@@ -70,10 +70,40 @@ public class CDetection {
 			}
 					);
 			if (rInfo.pixCount > 0) {
+				calcBwRatio(rInfo);
+				this.bDetection.setPercentArea(rInfo);
 				this.whiteRegions.add(rInfo);
 				marker++;
 			}
 		}
+	}
+	
+	public void calcBwRatio(RegionInfo r) {
+		int idx = 0;
+		int blk = 0;
+		int wht = 0;
+		boolean inRegion = false;
+		
+		for (int row = r.minY; row <= r.maxY; row++) {
+			inRegion = false;
+			for (int col = r.minX; col <= r.maxX; col++) {
+				idx = row*this.width + col;
+				//System.out.println(r.marker + ":" + (this.pixels[idx*3] & 0xff));
+				if ((this.pixels[idx*3] & 0xff) == r.marker) {
+					inRegion = true;
+					wht++;
+				}
+				else {
+					if ((this.pixels[idx*3] & 0xff) > 0 && (this.pixels[idx*3] & 0xff) != r.marker) {
+						inRegion = false;
+					}
+					if (inRegion && (this.pixels[idx*3] & 0xff) == 0) {
+						blk++;
+					}
+				}
+			}
+		}
+		r.bpRatio = (wht + blk > 0 ? (float)blk / (float)(wht + blk) : -1);
 	}
 
 	public void pairWhiteRegions() {
@@ -135,7 +165,7 @@ public class CDetection {
 			double diffArea = Math.abs(area1 - area2) / area1;
 			if (pair.isEyes)
 				System.out.println(pair.isEyes + ":diffArea=" + pair.diffArea + ", distCenters=" + pair.distCenters + ", distCorners=" + pair.distCorners + ", area1=" + area1 + ", area2=" + area2);
-			if (pair.isEyes || (pair.diffArea < 0.1 && pair.distCenters <= 0.1 && pair.distCorners <= 100 && area1 > 500 && area2 > 500  && area1 < 1500 && area2 < 1500)) {
+			if (pair.isEyes || (pair.diffArea > 0.3 && pair.distCenters <= 0.1 && pair.distCorners <= 100 && area1 > 500 && area2 > 500  && area1 < 1500 && area2 < 1500)) {
 				pair.computeHists();
 				pair.setEdgeMap(pixels, width, height);
 				sb.append(header);
@@ -272,9 +302,9 @@ public class CDetection {
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
-		String path = "./image1-2/";
-		//String path = "./image_0670/";
-		String outfile = "eyeCandidatesInfo1.txt";
+		//String path = "./image1-2/";
+		String path = "./image_0670/";
+		String outfile = "eyeCandidatesInfo2.txt";
 		File dir = new File(path);
 		File[] files = dir.listFiles(new FilenameFilter() {
 			public boolean accept(File directory, String fileName) {
@@ -289,6 +319,7 @@ public class CDetection {
 			bd = BDetection.factory(files[i]);
 			bd.createBWPixRankFilter();
 			bd.rlsaSmoothing();
+			//bd.setBlackPixels();
 			//bd.processBlackPixels();
 			//bd.classifyBlackRegions();
 			//bd.groupTexts(BDetection.GROUP_TEXT_THRESHOLD);

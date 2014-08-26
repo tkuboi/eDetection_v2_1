@@ -149,7 +149,7 @@ public class Convolution {
 			   }
 		   }
 	   }
-	   System.out.println("max=" + max);
+	   //System.out.println("max=" + max);
 	   return response;  
    }
    

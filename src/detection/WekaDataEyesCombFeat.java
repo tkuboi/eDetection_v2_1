@@ -9,7 +9,7 @@ import weka.core.Instances;
 
 public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 
-	private final int numFields = 227;
+	private final int numFields = 228;
 
 	public WekaDataEyesCombFeat() {
 		super();
@@ -19,13 +19,14 @@ public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 	@Override
 	public FastVector createVector() {
 		FastVector fvClassVal = new FastVector(2);
-		fvClassVal.addElement("true");
-		fvClassVal.addElement("false");
+		fvClassVal.addElement("1");
+		fvClassVal.addElement("0");
 		Attribute ClassAttribute = new Attribute("theClass", fvClassVal);
+		//Attribute ClassAttribute = new Attribute("theClass");
 
 		FastVector fvBoolVal = new FastVector(2);
-		fvBoolVal.addElement("true");
-		fvBoolVal.addElement("false");
+		fvBoolVal.addElement("1");
+		fvBoolVal.addElement("0");
 		
 		Attribute Attribute0 = new Attribute("diffArea");
 		Attribute Attribute1 = new Attribute("diffX1");
@@ -261,6 +262,7 @@ public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 		Attribute Attribute223 = new Attribute("atanHistV45");		
 		Attribute Attribute224 = new Attribute("atanHistV90");		
 		Attribute Attribute225 = new Attribute("atanHistV135");	
+		Attribute Attribute226 = new Attribute("area");	
 
 		FastVector fvWekaAttributes = new FastVector(numFields);
 		fvWekaAttributes.addElement(Attribute0);    
@@ -489,6 +491,7 @@ public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 		fvWekaAttributes.addElement(Attribute223);    
 		fvWekaAttributes.addElement(Attribute224);    
 		fvWekaAttributes.addElement(Attribute225);    
+		fvWekaAttributes.addElement(Attribute226);    
 		   
 		fvWekaAttributes.addElement(ClassAttribute);
 
@@ -731,9 +734,10 @@ public class WekaDataEyesCombFeat extends WekaData implements WekaFormat {
 			vector.setValue((Attribute)fvWekaAttributes.elementAt(223), Double.parseDouble(tokens[229].trim()));
 			vector.setValue((Attribute)fvWekaAttributes.elementAt(224), Double.parseDouble(tokens[230].trim()));
 			vector.setValue((Attribute)fvWekaAttributes.elementAt(225), Double.parseDouble(tokens[231].trim()));
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(226), Double.parseDouble(tokens[232].trim()));
 
 			//System.out.println(tokens[1].trim());
-			vector.setValue((Attribute)fvWekaAttributes.elementAt(226), tokens[1].trim());
+			vector.setValue((Attribute)fvWekaAttributes.elementAt(227), tokens[1].trim());
 			trainningSet.add(vector);
 		}
 		int cIdx=trainningSet.numAttributes()-1;

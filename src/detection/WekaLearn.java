@@ -16,7 +16,6 @@ import weka.core.Instance;
 import weka.core.Instances;
 //import weka.classifiers.functions.LibSVM;
 import weka.classifiers.functions.SMO;
-
 import myUtil.FileUtil;
 
 public class WekaLearn {
@@ -27,6 +26,13 @@ public class WekaLearn {
 	public WekaLearn() {
 		//model = new LibSVM();
 		model = new SMO();
+		/*try {
+			//model.setOptions(weka.core.Utils.splitOptions("-C 1.0 -L 0.0010 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.PolyKernel -C 250007 -E 1.0\""));
+			//model.setOptions(weka.core.Utils.splitOptions("-C 8.0 -L 0.0010 -P 1.0E-12 -N 0 -V -1 -W 1 -K \"weka.classifiers.functions.supportVector.RBFKernel -C 250007 -G 1.0\""));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}*/
 	}
 
 	public Classifier exportModel() {
@@ -449,28 +455,40 @@ public class WekaLearn {
 	
 	public static void main(String[] args) {
 		List<String> data = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet1.csv");
-		data.remove(0);
+		String header = data.remove(0);
 		int trials = 5;
 		double[] result1 = {0,0,0,0};
 		double[] result2 = {0,0,0,0};
-		Boolean semi = false;
-		if (!semi) {
+		int learning = 0; //0: supervised, 1: semi-supervised, 2: ansemble
+		if (learning == 0) {
 			List<String> data2 = FileUtil.readCSV("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv");
 			data2.remove(0);
 			data.addAll(data2);
 		}
-		
-		for (int i=0; i < trials; i++) {
-			List<String> newdata = WekaLearn.run(data, 1, 1, 1, result1);
-			if (semi) {
-				FileUtil.writeCSV(newdata, "SemiSVTrainingSet.csv");
-				System.out.println("Testing Semi Supervised Learning");
-				WekaLearn model = new WekaLearn();
-				model.buildClassifier(newdata);
-				model.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv", result2);
+
+		if (learning != 2) {
+			for (int i=0; i < trials; i++) {
+				List<String> newdata = WekaLearn.run(data, 1, 1, 1, result1);
+				if (learning == 1) {
+					FileUtil.writeCSV(newdata, "SemiSVTrainingSet.csv");
+					System.out.println("Testing Semi Supervised Learning");
+					WekaLearn model = new WekaLearn();
+					model.buildClassifier(newdata);
+					model.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv", result2);
+				}
 			}
 		}
-		if (!semi)
+		else {
+			WekaLearn model = new WekaLearn();
+			model.buildClassifier(data);
+			List<String> labels = new ArrayList<String>();
+			labels.add(header);
+			labels.addAll(model.classify("/Users/toshihirokuboi/Workspace/eDetection_v2_1/src/featureSet3.csv", result2));
+			FileUtil.writeCSV(labels, "labels_SVM.csv");
+			trials = 1;
+		}
+		
+		if (learning == 0)
 		    System.out.println("Acc=" + result1[0]/(double)trials + ", Prec=" + result1[1]/(double)trials + ", Recall=" + result1[2]/(double)trials + ", F=" + result1[3]/(double)trials);
 		else
 		    System.out.println("Acc=" + result2[0]/(double)trials + ", Prec=" + result2[1]/(double)trials + ", Recall=" + result2[2]/(double)trials + ", F=" + result2[3]/(double)trials);

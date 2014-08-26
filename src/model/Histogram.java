@@ -14,7 +14,7 @@ public class Histogram {
     }
     
     public void bin(int v) {
-    	int i = (this.size - 1) * (v - this.min) / (this.max - this.min);
+    	int i = (this.size) * (v - this.min) / (this.max - this.min);
     	this.bins[i]++;
     }
 
@@ -23,12 +23,12 @@ public class Histogram {
     }
 
     public void binWithValue(int i, int v) {
-    	int idx = (this.size - 1) * (i - this.min) / (this.max - this.min);
+    	int idx = (this.size) * (i - this.min) / (this.max - this.min);
     	this.bins[idx] = v;
     }
 
     public void binWithValueAdd(int i, int v) {
-    	int idx = (this.size - 1) * (i - this.min) / (this.max - this.min);
+    	int idx = (this.size) * (i - this.min) / (this.max - this.min);
     	this.bins[idx] += v;
     }
 
@@ -52,6 +52,32 @@ public class Histogram {
     	return this.bins;
     }
     
+    public int getSum() {
+    	int sum = 0;
+    	for (int bin : this.bins) {
+    		sum += bin;
+    	}
+    	return sum;
+    }
+    
+    public int getMaxVal() {
+    	int max = this.bins[0];
+    	for (int bin : this.bins) {
+    		if (bin > max)
+    			max = bin;
+    	}
+    	return max;
+    }
+
+    public int getMinVal() {
+    	int min = this.bins[0];
+    	for (int bin : this.bins) {
+    		if (bin < min)
+    			min = bin;
+    	}
+    	return min;
+    }
+
     public String toJsonString() {
     	String str = "[";
     	for (int i = 0; i < this.size - 1; i++) {
@@ -67,12 +93,38 @@ public class Histogram {
     	String str = "";
     	for (int i = 0; i < this.size - 1; i++) {
     		str += this.bins[i];
-    		str += ", ";
+    		str += ",";
     	}
     	str += this.bins[this.size - 1];
     	return str;
     }
-    
+
+    public String toCsvStringNormalized() {
+    	String str = "";
+    	for (int i = 0; i < this.size - 1; i++) {
+    		str += (getSum() > 0 ? (float)this.bins[i] / (float)getSum() : 0);
+    		str += ",";
+    	}
+    	str += (getSum() > 0 ? (float)this.bins[this.size - 1] / (float)getSum() : 0);
+    	return str;
+    }
+
+    public String toCsvStringDiscretized(int num_cat) {
+    	String str = "";
+    	for (int i = 0; i < this.size - 1; i++) {
+    		str += (getSum() > 0 ? discretize((float)this.bins[i], (float)getSum(), num_cat) : 0);
+    		str += ",";
+    	}
+    	str += (getSum() > 0 ? discretize((float)this.bins[this.size - 1], (float)getSum(), num_cat) : 0);
+    	return str;
+    }
+
+    int discretize(float v, float sum, int num_cat) {
+    	float min = getMinVal();
+    	float max = getMaxVal();
+    	return (int)(((v == 0 ? v : v+1) - min) * num_cat / (max - min + 1));
+    }
+
     public static String getLabels(String name, int size) {
     	StringBuilder sb = new StringBuilder();
     	for (int i = 1; i <= size; i++) {
